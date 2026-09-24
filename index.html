@@ -130,20 +130,37 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 25px;
             margin-bottom: 15px;
-            min-height: 80px; /* Фиксирует высоту, чтобы интерфейс не прыгал */
+            min-height: 85px; 
         }
         
         .hub-logo {
             display: block;
-            height: 75px;
-            width: 75px;
-            object-fit: contain;
+            height: 80px;  /* Фиксированная одинаковая высота */
+            width: 80px;   /* Фиксированная одинаковая ширина */
+            object-fit: cover;
             opacity: 0.95;
             pointer-events: none;
-            border-radius: 50%; /* Делает отображение картинок круглым, как на схеме */
+            border-radius: 50%; 
             transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        /* CSS-красильщики для белых png-логотипов */
+        .logo-atlantis {
+            filter: brightness(0) invert(1);
+        }
+        /* Окрашивание в винно-бордовый цвет */
+        .logo-las {
+            filter: invert(13%) sepia(85%) saturate(3731%) hue-rotate(331deg) brightness(83%) contrast(108%);
+        }
+        /* Окрашивание в ярко-желтый цвет */
+        .logo-art {
+            filter: invert(74%) sepia(93%) saturate(1478%) hue-rotate(360deg) brightness(103%) contrast(106%);
+        }
+        /* Окрашивание в ало-красный цвет */
+        .logo-tfb {
+            filter: invert(14%) sepia(96%) saturate(5799%) hue-rotate(357deg) brightness(98%) contrast(113%);
         }
         
         #out {
@@ -237,7 +254,7 @@
     <div class="header" id="hd">
         <!-- Контейнер для динамического выстраивания круглых иконок в ряд -->
         <div class="logo-container" id="logos-box">
-            <img src="atlantis.png" class="hub-logo" alt="LOGOTYPE">
+            <img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">
         </div>
         P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK
     </div>
@@ -301,7 +318,7 @@ const DOM = {
     logosBox: document.getElementById('logos-box')
 };
 
-let step = 'menu'; 
+let step = 'menu'; // 'menu', 'reading_bio', 'bio_finished', 'dialogue_1', 'dialogue_2', 'dialogue_3'
 let currentChapterIdx = 0;
 let isMask = false;
 let isPrinting = false;
@@ -381,8 +398,8 @@ async function showMainMenu() {
     DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
     DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
     
-    // Сброс шапки: оставляем только одну чистую иконку Atlantis
-    DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo" alt="LOGOTYPE">';
+    // Сброс шапки к дефолтной белой иконке Atlantis
+    DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">';
     
     DOM.out.innerHTML = "";
     await typeTerminal("PMC ATLANTIS // CENTRAL CORE TERMINAL v4.0", "success");
@@ -401,32 +418,39 @@ async function printNextChapter() {
         if (currentChapterIdx < BIO_CHAPTERS.length) {
             ask('ХАБ // НАЖМИТЕ [ENTER] ДЛЯ СЛЕДУЮЩЕЙ ГЛАВЫ...', false);
         } else {
-            // Этап 1: Очищаем шапку от Atlantis и добавляем только первую иконку logoLAS.png
-            step = 'dialogue_1';
+            // Остановка после 10-й главы: даем человеку дочитать до конца
+            step = 'bio_finished';
             addLine("\n---------------------------------------------------", "gray");
-            
-            DOM.term.classList.add('stage-bordo');
-            DOM.hd.style.borderBottomColor = "var(--color-bordo)";
-            DOM.blk.style.borderTopColor = "var(--color-bordo)";
-            
-            // Выставляем первый бордовый круг в шапку
-            DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo" alt="LAS">';
-            
-            playBeep(220, 'sawtooth', 0.4);
-            await typeTerminal("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
-            await typeTerminal("...А ты знаешь, кто на самом деле виновник той трагедии на Итагурской АЭС?", "txt-bordo", CFG.SPD_DIALOGUE);
-            
-            ask('ДЕПАРТАМЕНТ L.a.S // НАЖМИТЕ [ENTER]...', false);
+            await typeTerminal("ДОСЬЕ ПОЛНОСТЬЮ СКОПИРОВАНО В БУФЕР ПАМЯТИ.", "success");
+            ask('ХАБ // НАЖМИТЕ [ENTER] ДЛЯ ИНИЦИАЛИЗАЦИИ ВНЕШНЕГО КАНАЛА...', false);
         }
     }
+}
+
+async function runDialogueStage1() {
+    step = 'dialogue_1';
+    
+    DOM.term.classList.add('stage-bordo');
+    DOM.hd.style.borderBottomColor = "var(--color-bordo)";
+    DOM.blk.style.borderTopColor = "var(--color-bordo)";
+    
+    // Сцена 1: Только один круг logoLAS (перекрашенный в бордовый через CSS класс)
+    DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">';
+    
+    playBeep(220, 'sawtooth', 0.4);
+    await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
+    await typeTerminal("...А ты знаешь, кто на самом деле виновник той трагедии на Итагурской АЭС?", "txt-bordo", CFG.SPD_DIALOGUE);
+    
+    ask('ДЕПАРТАМЕНТ L.a.S // НАЖМИТЕ [ENTER]...', false);
 }
 
 async function runDialogueStage2() {
     step = 'dialogue_2';
     DOM.term.className = "terminal-box stage-split-2";
     
-    // НЕ удаляем прошлый круг, а добавляем рядом второй (logoART.png)
-    DOM.logosBox.innerHTML += '<img src="logoART.png" class="hub-logo" alt="ART">';
+    // Сцена 2: Сохраняем бордовый и добавляем рядом идеально равный желтый logoART
+    DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
+                             '<img src="logoART.png" class="hub-logo logo-art" alt="ART">';
     
     playBeep(260, 'sawtooth', 0.4);
     await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ ART]:", "txt-yellow");
@@ -439,8 +463,10 @@ async function runDialogueStage3() {
     step = 'dialogue_3';
     DOM.term.className = "terminal-box stage-split-3";
     
-    // Снова НЕ удаляем прошлые, а дописываем в ряд третью иконку (logoTFB.png)
-    DOM.logosBox.innerHTML += '<img src="logoTFB.png" class="hub-logo" alt="TFB">';
+    // Сцена 3: Удерживаем старые и выстраиваем в ряд третий равный красный круг logoTFB
+    DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
+                             '<img src="logoART.png" class="hub-logo logo-art" alt="ART">' +
+                             '<img src="logoTFB.png" class="hub-logo logo-tfb" alt="TFB">';
     
     playBeep(300, 'sawtooth', 0.5);
     await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ T.F.B]:", "txt-red");
@@ -487,6 +513,11 @@ DOM.inp.onkeydown = async (e) => {
         DOM.blk.classList.remove('active'); 
         DOM.inp.disabled = true;
         await printNextChapter();
+    }
+    else if (step === 'bio_finished') {
+        DOM.blk.classList.remove('active'); 
+        DOM.inp.disabled = true;
+        await runDialogueStage1(); // Игрок дочитал 10 главу и сам перешел к первому вопросу
     }
     else if (step === 'dialogue_1') {
         DOM.blk.classList.remove('active'); 
