@@ -124,16 +124,28 @@
             flex-shrink: 0;
             transition: border-bottom-color 0.5s ease;
         }
+        
+        /* Горизонтальный контейнер для добавления круглых иконок-логотипов */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            min-height: 80px; /* Фиксирует высоту, чтобы интерфейс не прыгал */
+        }
+        
         .hub-logo {
             display: block;
-            max-width: 150px;
-            height: auto;
-            margin: 0 auto 15px auto;
+            height: 75px;
+            width: 75px;
+            object-fit: contain;
             opacity: 0.95;
             pointer-events: none;
-            filter: brightness(0) invert(1); 
-            transition: opacity 0.3s ease;
+            border-radius: 50%; /* Делает отображение картинок круглым, как на схеме */
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
+        
         #out {
             flex-grow: 1;
             overflow-y: auto;
@@ -223,7 +235,10 @@
 
 <div class="terminal-box" id="term">
     <div class="header" id="hd">
-        <img src="atlantis.png" class="hub-logo" id="main-logo" alt="LOGOTYPE">
+        <!-- Контейнер для динамического выстраивания круглых иконок в ряд -->
+        <div class="logo-container" id="logos-box">
+            <img src="atlantis.png" class="hub-logo" alt="LOGOTYPE">
+        </div>
         P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK
     </div>
     <div id="out"></div>
@@ -243,7 +258,6 @@ const CFG = {
     SPD_DIALOGUE: 20
 };
 
-// Все главы надёжно защищены косыми кавычками
 const BIO_CHAPTERS = [
     `ГЛАВА 1: Рождение в трущобах.
 Детство Сергея проходило среди серых промзон и фабричного дыма. С ранних лет ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
@@ -284,7 +298,7 @@ const DOM = {
     introLogo: document.getElementById('intro-logo'),
     introText: document.getElementById('intro-text'),
     hd: document.getElementById('hd'),
-    mainLogo: document.getElementById('main-logo')
+    logosBox: document.getElementById('logos-box')
 };
 
 let step = 'menu'; 
@@ -366,7 +380,9 @@ async function showMainMenu() {
     DOM.term.className = "terminal-box";
     DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
     DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
-    DOM.mainLogo.src = "atlantis.png";
+    
+    // Сброс шапки: оставляем только одну чистую иконку Atlantis
+    DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo" alt="LOGOTYPE">';
     
     DOM.out.innerHTML = "";
     await typeTerminal("PMC ATLANTIS // CENTRAL CORE TERMINAL v4.0", "success");
@@ -385,14 +401,16 @@ async function printNextChapter() {
         if (currentChapterIdx < BIO_CHAPTERS.length) {
             ask('ХАБ // НАЖМИТЕ [ENTER] ДЛЯ СЛЕДУЮЩЕЙ ГЛАВЫ...', false);
         } else {
-            // Этап 1: Логотип logoLAS.png (бордовый)
+            // Этап 1: Очищаем шапку от Atlantis и добавляем только первую иконку logoLAS.png
             step = 'dialogue_1';
             addLine("\n---------------------------------------------------", "gray");
             
             DOM.term.classList.add('stage-bordo');
             DOM.hd.style.borderBottomColor = "var(--color-bordo)";
             DOM.blk.style.borderTopColor = "var(--color-bordo)";
-            DOM.mainLogo.src = "logoLAS.png"; 
+            
+            // Выставляем первый бордовый круг в шапку
+            DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo" alt="LAS">';
             
             playBeep(220, 'sawtooth', 0.4);
             await typeTerminal("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
@@ -406,7 +424,9 @@ async function printNextChapter() {
 async function runDialogueStage2() {
     step = 'dialogue_2';
     DOM.term.className = "terminal-box stage-split-2";
-    DOM.mainLogo.src = "logoART.png"; // Желтый аватар
+    
+    // НЕ удаляем прошлый круг, а добавляем рядом второй (logoART.png)
+    DOM.logosBox.innerHTML += '<img src="logoART.png" class="hub-logo" alt="ART">';
     
     playBeep(260, 'sawtooth', 0.4);
     await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ ART]:", "txt-yellow");
@@ -418,7 +438,9 @@ async function runDialogueStage2() {
 async function runDialogueStage3() {
     step = 'dialogue_3';
     DOM.term.className = "terminal-box stage-split-3";
-    DOM.mainLogo.src = "logoTFB.png"; // Красный аватар
+    
+    // Снова НЕ удаляем прошлые, а дописываем в ряд третью иконку (logoTFB.png)
+    DOM.logosBox.innerHTML += '<img src="logoTFB.png" class="hub-logo" alt="TFB">';
     
     playBeep(300, 'sawtooth', 0.5);
     await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ T.F.B]:", "txt-red");
