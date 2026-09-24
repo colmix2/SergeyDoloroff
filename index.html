@@ -11,6 +11,11 @@
             --bg-panel: #000000;
             --err: #ff1111;        
             --acc: #ffffff;
+            
+            /* Цвета для этапов откровения департаментов */
+            --color-bordo: #800020;
+            --color-yellow: #ffcc00;
+            --color-red: #ff1111;
         }
         body {
             background-color: var(--bg);
@@ -18,6 +23,9 @@
             font-family: 'Courier New', monospace;
             font-size: 15px;
             font-weight: 600;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -27,27 +35,7 @@
             justify-content: center;
             overflow: hidden;
         }
-        /* Сканлайны поверх всего экрана */
-        body::before, body::after {
-            content: " ";
-            display: block;
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(rgba(255, 255, 255, 0.02) 50%, rgba(0, 0, 0, 0.5) 50%), linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.02));
-            z-index: 999;
-            background-size: 100% 4px, 6px 100%;
-            pointer-events: none;
-        }
-        body::after {
-            background: linear-gradient(rgba(0, 0, 0, 0) 90%, rgba(255, 255, 255, 0.04) 95%, rgba(0, 0, 0, 0) 100%);
-            background-size: 100% 300%;
-            animation: scanline 8s linear infinite;
-            z-index: 1000;
-        }
-        @keyframes scanline {
-            0% { background-position: 0 -300%; }
-            100% { background-position: 0 300%; }
-        }
+        
         @keyframes shake {
             0%, 100% { transform: translate(0, 0); }
             20%, 60% { transform: translate(-4px, 2px); }
@@ -74,20 +62,21 @@
             height: auto;
             margin-bottom: 40px;
             opacity: 0;
-            filter: brightness(0) invert(1) drop-shadow(0 0 15px rgba(255,255,255,0.2));
+            filter: brightness(0) invert(1);
             transition: opacity 1.5s ease;
             pointer-events: none;
         }
         #intro-text {
             max-width: 800px;
-            font-size: 24px; /* Крупный текст по центру */
+            font-size: 24px;
             line-height: 1.6;
             text-align: center;
             white-space: pre-wrap;
             word-break: break-word;
+            color: #ffffff;
         }
 
-        /* Консоль (скрыта изначально) */
+        /* Консоль с поддержкой динамических рамок */
         .terminal-box {
             width: 100%;
             max-width: 850px;
@@ -96,15 +85,31 @@
             border: 2px solid var(--glow); 
             border-radius: 8px;
             padding: 30px;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
             position: relative;
             box-sizing: border-box;
-            display: none; /* Проявится через скрипт */
+            display: none;
             flex-direction: column;
             overflow: hidden;
             opacity: 0;
-            transition: opacity 1s ease;
+            transition: opacity 1s ease, border-color 0.5s ease, border-image 0.5s ease;
         }
+
+        /* Классы динамического изменения рамок по вашим схемам */
+        .terminal-box.stage-bordo {
+            border-color: var(--color-bordo) !important;
+            border-image: none !important;
+        }
+        .terminal-box.stage-split-2 {
+            border-style: solid;
+            border-width: 2px;
+            border-image: linear-gradient(to right, var(--color-bordo) 50%, var(--color-yellow) 50%) 1 !important;
+        }
+        .terminal-box.stage-split-3 {
+            border-style: solid;
+            border-width: 2px;
+            border-image: linear-gradient(to right, var(--color-bordo) 33%, var(--color-yellow) 33%, var(--color-yellow) 66%, var(--color-red) 66%) 1 !important;
+        }
+
         .header {
             color: var(--glow);
             border-bottom: 2px solid rgba(255, 255, 255, 0.2);
@@ -117,6 +122,7 @@
             align-items: center;
             text-align: center;
             flex-shrink: 0;
+            transition: border-bottom-color 0.5s ease;
         }
         .hub-logo {
             display: block;
@@ -126,6 +132,7 @@
             opacity: 0.95;
             pointer-events: none;
             filter: brightness(0) invert(1); 
+            transition: opacity 0.3s ease;
         }
         #out {
             flex-grow: 1;
@@ -143,15 +150,21 @@
             word-break: break-all;
             white-space: pre-wrap;
         }
+        
+        /* Классы для разноцветного текста */
+        .txt-bordo { color: var(--color-bordo) !important; font-weight: bold; }
+        .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; }
+        .txt-red { color: var(--color-red) !important; font-weight: bold; }
+
         .input-line {
             display: flex;
             align-items: center;
             margin-top: auto; 
             padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, border-top-color 0.5s ease;
             flex-shrink: 0;
         }
         .input-line.active { opacity: 1; visibility: visible; }
@@ -198,21 +211,19 @@
         }
         .error { color: var(--err); font-weight: bold; }
         .success { color: var(--acc); font-weight: bold; }
-        .gray { color: rgba(255, 255, 255, 0.5); }
+        .gray { color: #ffffff; opacity: 0.5; }
     </style>
 </head>
 <body>
 
-<!-- Экран кинематографичного интро -->
 <div id="intro-screen">
     <img src="atlantis.png" id="intro-logo" alt="ATLANTIS LOGO">
     <div id="intro-text"></div>
 </div>
 
-<!-- Блок консоли -->
 <div class="terminal-box" id="term">
     <div class="header" id="hd">
-        <img src="atlantis.png" class="hub-logo" alt="ATLANTIS LOGO">
+        <img src="atlantis.png" class="hub-logo" id="main-logo" alt="LOGOTYPE">
         P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK
     </div>
     <div id="out"></div>
@@ -226,18 +237,60 @@
 </div>
 <script>
 const CFG = { 
-    SPD: 30 // Скорость печати букв для интро
+    SPD_INTRO: 30,
+    SPD_TERMINAL: 15,
+    SPD_BIO: 5,
+    SPD_DIALOGUE: 20
 };
+
+// Все главы надёжно защищены косыми кавычками
+const BIO_CHAPTERS = [
+    `ГЛАВА 1: Рождение в трущобах.
+Детство Сергея проходило среди серых промзон и фабричного дыма. С ранних лет ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
+
+    `ГЛАВА 2: Первая кровь и суровые уроки.
+Уличные потасовки быстро переросли в нечто большее. Сломанный нос, первые шрамы и осознание того, что единственный способ выжить — стать умнее и жестче окружающих.`,
+
+    `ГЛАВА 3: Военный контракт.
+Армия стала для него спасением от тюрьмы, но бросила в самое пекло локальных конфликтов. Именно там сформировался его тяжелый взгляд, который теперь боятся подчиненные.`,
+
+    `ГЛАВА 4: Роковая ошибка и шрамы.
+Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и ментальное.`,
+
+    `ГЛАВА 5: Знакомство с трубкой.
+Горький табак стал единственным средством заглушить постоянный запах гари в воспоминаниях. Дым скрывал эмоции, которые профессионалу показывать нельзя.`,
+
+    `ГЛАВА 6: Переход под крыло Atlantis.
+ЧВК заметила перспективного оперативника с железной дисциплиной. Ему предложили работу, где не задают лишних вопросов, а просто ликвидируют угрозы.`,
+
+    `ГЛАВА 7: Из грязи в командиры.
+Годы безупречной службы, сотни выполненных контрактов. Сергей поднимался по карьерной лестнице, оставляя за спиной горы выжженной земли.`,
+
+    `ГЛАВА 8: За кулисами штаба.
+Управление целым отделом ГСБ требует больше хладнокровия, чем стрельба. Враги теперь плели интриги в кабинетах, а не прятались в окопах.`,
+
+    `ГЛАВА 9: Уважение, выжженное сталью.
+Отдел уважает его не за мягкость, а за то, что он никогда не прячется за чужие спины. Командир, готовый лично пойти в авангарде.`,
+
+    `ГЛАВА 10: Настоящее время.
+Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
+];
+
 const DOM = { 
     term: document.getElementById('term'), inp: document.getElementById('inp'), 
     view: document.getElementById('view'), out: document.getElementById('out'), 
     pr: document.getElementById('pr'), blk: document.getElementById('blk'),
     introScreen: document.getElementById('intro-screen'),
     introLogo: document.getElementById('intro-logo'),
-    introText: document.getElementById('intro-text')
+    introText: document.getElementById('intro-text'),
+    hd: document.getElementById('hd'),
+    mainLogo: document.getElementById('main-logo')
 };
 
+let step = 'menu'; 
+let currentChapterIdx = 0;
 let isMask = false;
+let isPrinting = false;
 const delay = ms => new Promise(r => setTimeout(r, ms));
 let audioCtx = null;
 
@@ -259,24 +312,23 @@ function addLine(txt, cls = "") {
     DOM.out.appendChild(d); DOM.out.scrollTop = DOM.out.scrollHeight; return d;
 }
 
-async function typeTerminal(txt, cls = "") {
+async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL) {
+    isPrinting = true;
     const d = addLine("", cls);
     for (let i = 0; i < txt.length; i++) {
         d.textContent += txt.charAt(i); 
         if (Math.random() > 0.3) playBeep(840, 'square', 0.015); 
-        await delay(CFG.SPD);
+        await delay(speed);
     }
+    DOM.out.scrollTop = DOM.out.scrollHeight;
+    isPrinting = false;
 }
-
-// Отдельная функция печати для центрального интро
 async function typeIntro(txt, startLogo = false) {
-    if (startLogo) {
-        DOM.introLogo.style.opacity = "0.85"; // Картинка плавно проявляется
-    }
+    if (startLogo) DOM.introLogo.style.opacity = "1";
     for (let i = 0; i < txt.length; i++) {
         DOM.introText.textContent += txt.charAt(i);
         if (Math.random() > 0.3) playBeep(700, 'sine', 0.02);
-        await delay(CFG.SPD + 10);
+        await delay(CFG.SPD_INTRO);
     }
 }
 
@@ -291,55 +343,145 @@ function ask(promptText, maskInput = false) {
 
 async function runCinematicIntro() {
     DOM.introText.textContent = "";
-    
-    // Первая фраза
     await typeIntro("Сергей — хороший человек и отличный ГСБ, которого искренне уважает его отдел. ");
     await delay(1200);
-    
-    // Вторая фраза
     await typeIntro("Но задумывались ли вы когда-нибудь, через какой ад ему пришлось пройти и что именно он пережил, чтобы в итоге занять это кресло?\n\n");
     await delay(1500);
-    
-    // Третья фраза: Начинает писаться "За жестким характером..." — выкатывается картинка
     await typeIntro("За жестким характером, вечной трубкой в зубах и тяжелым взглядом скрывается история парня, которого жизнь ломала с самого детства.", true);
     await delay(3500);
 
-    // Плавное исчезновение интро-экрана
     DOM.introScreen.style.opacity = "0";
     await delay(1000);
     DOM.introScreen.style.display = "none";
 
-    // Плавное появление основной консоли
     DOM.term.style.display = "flex";
     await delay(50);
     DOM.term.style.opacity = "1";
     
-    // Запуск интерфейса хаба
-    await delay(400);
-    await typeTerminal("PMC ATLANTIS // CENTRAL CORE TERMINAL v4.0", "success");
-    await typeTerminal("SYSTEM INITIALIZED. STANDING BY FOR COMMANDS...", "gray");
+    await showMainMenu();
+}
+
+async function showMainMenu() {
+    step = 'menu';
+    DOM.term.className = "terminal-box";
+    DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
+    DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
+    DOM.mainLogo.src = "atlantis.png";
     
-    ask('ENTER COMMAND:', false);
+    DOM.out.innerHTML = "";
+    await typeTerminal("PMC ATLANTIS // CENTRAL CORE TERMINAL v4.0", "success");
+    await typeTerminal("ДОСТУПНЫЕ ОПЦИИ СИСТЕМЫ:", "gray");
+    await typeTerminal("1. Прочитать биографию Сергея", "success");
+    ask('ВЫБЕРИТЕ ПУНКТ (1):', false);
+}
+
+async function printNextChapter() {
+    if (currentChapterIdx < BIO_CHAPTERS.length) {
+        step = 'reading_bio';
+        addLine("\n---------------------------------------------------", "gray");
+        await typeTerminal(BIO_CHAPTERS[currentChapterIdx], "", CFG.SPD_BIO);
+        currentChapterIdx++;
+        
+        if (currentChapterIdx < BIO_CHAPTERS.length) {
+            ask('ХАБ // НАЖМИТЕ [ENTER] ДЛЯ СЛЕДУЮЩЕЙ ГЛАВЫ...', false);
+        } else {
+            // Этап 1: Логотип logoLAS.png (бордовый)
+            step = 'dialogue_1';
+            addLine("\n---------------------------------------------------", "gray");
+            
+            DOM.term.classList.add('stage-bordo');
+            DOM.hd.style.borderBottomColor = "var(--color-bordo)";
+            DOM.blk.style.borderTopColor = "var(--color-bordo)";
+            DOM.mainLogo.src = "logoLAS.png"; 
+            
+            playBeep(220, 'sawtooth', 0.4);
+            await typeTerminal("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
+            await typeTerminal("...А ты знаешь, кто на самом деле виновник той трагедии на Итагурской АЭС?", "txt-bordo", CFG.SPD_DIALOGUE);
+            
+            ask('ДЕПАРТАМЕНТ L.a.S // НАЖМИТЕ [ENTER]...', false);
+        }
+    }
+}
+
+async function runDialogueStage2() {
+    step = 'dialogue_2';
+    DOM.term.className = "terminal-box stage-split-2";
+    DOM.mainLogo.src = "logoART.png"; // Желтый аватар
+    
+    playBeep(260, 'sawtooth', 0.4);
+    await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ ART]:", "txt-yellow");
+    await typeTerminal("...А ты знаешь, что Гилберта можно было спасти, а не убивать?", "txt-yellow", CFG.SPD_DIALOGUE);
+    
+    ask('ДЕПАРТАМЕНТ ART // НАЖМИТЕ [ENTER]...', false);
+}
+
+async function runDialogueStage3() {
+    step = 'dialogue_3';
+    DOM.term.className = "terminal-box stage-split-3";
+    DOM.mainLogo.src = "logoTFB.png"; // Красный аватар
+    
+    playBeep(300, 'sawtooth', 0.5);
+    await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ T.F.B]:", "txt-red");
+    await typeTerminal("...А ты знаешь, что он убивал бойцов Расонии во втором секторе, когда те были согласны на перемирие?", "txt-red", CFG.SPD_DIALOGUE);
+    
+    addLine("\n---------------------------------------------------", "gray");
+    ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ ВОЗВРАТА В ХАБ...', false);
 }
 
 DOM.inp.oninput = () => { 
-    DOM.view.textContent = isMask ? "*".repeat(DOM.inp.value.length) : DOM.inp.value; 
+    if(step === 'menu') {
+        DOM.view.textContent = isMask ? "*".repeat(DOM.inp.value.length) : DOM.inp.value; 
+    } else {
+        DOM.view.textContent = "";
+    }
 };
 
 DOM.inp.onkeydown = async (e) => {
-    if (e.key !== 'Enter') return;
+    if (e.key !== 'Enter' || isPrinting) return;
     
-    const v = DOM.inp.value, cv = v.trim(); 
-    if (!v) return;
+    const v = DOM.inp.value, cv = v.trim();
 
-    DOM.blk.classList.remove('active'); 
-    DOM.inp.disabled = true; 
-    
-    addLine(DOM.pr.textContent + " " + (isMask ? "*".repeat(v.length) : cv), 'success'); 
-    await delay(300);
-    
-    await typeTerminal(`Получена команда: ${cv}`, "gray");
-    ask('ENTER COMMAND:', false);
+    if (step === 'menu') {
+        if (!v) return;
+        DOM.blk.classList.remove('active'); 
+        DOM.inp.disabled = true; 
+        addLine(DOM.pr.textContent + " " + cv, 'success'); 
+        await delay(300);
+
+        if (cv === '1') {
+            currentChapterIdx = 0;
+            DOM.out.innerHTML = "";
+            await printNextChapter();
+        } else {
+            DOM.term.classList.add('shake');
+            playBeep(130, 'triangle', 0.35);
+            setTimeout(() => DOM.term.classList.remove('shake'), 400);
+            addLine("ОШИБКА: НЕВЕРНЫЙ ВЫБОР", "error");
+            await delay(1000);
+            await showMainMenu();
+        }
+    } 
+    else if (step === 'reading_bio') {
+        DOM.blk.classList.remove('active'); 
+        DOM.inp.disabled = true;
+        await printNextChapter();
+    }
+    else if (step === 'dialogue_1') {
+        DOM.blk.classList.remove('active'); 
+        DOM.inp.disabled = true;
+        await runDialogueStage2();
+    }
+    else if (step === 'dialogue_2') {
+        DOM.blk.classList.remove('active'); 
+        DOM.inp.disabled = true;
+        await runDialogueStage3();
+    }
+    else if (step === 'dialogue_3') {
+        DOM.blk.classList.remove('active'); 
+        DOM.inp.disabled = true;
+        currentChapterIdx = 0;
+        await showMainMenu();
+    }
 };
 
 document.onclick = () => DOM.inp.disabled || DOM.inp.focus(); 
