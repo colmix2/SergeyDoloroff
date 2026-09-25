@@ -13,9 +13,9 @@
             --acc: #ffffff;
             
             /* Цвета для этапов откровения департаментов */
-            --color-bordo: #800020;
-            --color-yellow: #ffcc00;
-            --color-red: #ff1111;
+            --color-bordo: #5e0b21;    /* Темно-бордовый */
+            --color-yellow: #ffcc00;   /* Желтый */
+            --color-red: #ff1111;      /* Ало-красный */
         }
         body {
             background-color: var(--bg);
@@ -94,7 +94,6 @@
             transition: opacity 1s ease, border-color 0.5s ease, border-image 0.5s ease;
         }
 
-        /* Классы динамического изменения рамок по вашим схемам */
         .terminal-box.stage-bordo {
             border-color: var(--color-bordo) !important;
             border-image: none !important;
@@ -125,7 +124,6 @@
             transition: border-bottom-color 0.5s ease;
         }
         
-        /* Горизонтальный контейнер для добавления круглых иконок-логотипов */
         .logo-container {
             display: flex;
             justify-content: center;
@@ -134,31 +132,34 @@
             margin-bottom: 15px;
             min-height: 85px; 
         }
+
+        /* Анимация плавного появления для картинок */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 0.95; transform: scale(1); }
+        }
         
         .hub-logo {
             display: block;
-            height: 80px;  /* Фиксированная одинаковая высота */
-            width: 80px;   /* Фиксированная одинаковая ширина */
+            height: 80px;  
+            width: 80px;   
             object-fit: cover;
-            opacity: 0.95;
             pointer-events: none;
             border-radius: 50%; 
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            animation: fadeIn 0.6s ease forwards; /* Плавное проявление */
         }
 
-        /* CSS-красильщики для белых png-логотипов */
+        /* Точная подгонка цветов через CSS-фильтры */
         .logo-atlantis {
             filter: brightness(0) invert(1);
         }
-        /* Окрашивание в винно-бордовый цвет */
+        /* Скорректировано под мрачный темно-бордовый цвет по скриншоту */
         .logo-las {
-            filter: invert(13%) sepia(85%) saturate(3731%) hue-rotate(331deg) brightness(83%) contrast(108%);
+            filter: invert(9%) sepia(87%) saturate(5484%) hue-rotate(334deg) brightness(50%) contrast(100%);
         }
-        /* Окрашивание в ярко-желтый цвет */
         .logo-art {
             filter: invert(74%) sepia(93%) saturate(1478%) hue-rotate(360deg) brightness(103%) contrast(106%);
         }
-        /* Окрашивание в ало-красный цвет */
         .logo-tfb {
             filter: invert(14%) sepia(96%) saturate(5799%) hue-rotate(357deg) brightness(98%) contrast(113%);
         }
@@ -180,7 +181,6 @@
             white-space: pre-wrap;
         }
         
-        /* Классы для разноцветного текста */
         .txt-bordo { color: var(--color-bordo) !important; font-weight: bold; }
         .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; }
         .txt-red { color: var(--color-red) !important; font-weight: bold; }
@@ -252,7 +252,6 @@
 
 <div class="terminal-box" id="term">
     <div class="header" id="hd">
-        <!-- Контейнер для динамического выстраивания круглых иконок в ряд -->
         <div class="logo-container" id="logos-box">
             <img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">
         </div>
@@ -286,7 +285,7 @@ const BIO_CHAPTERS = [
 Армия стала для него спасением от тюрьмы, но бросила в самое пекло локальных конфликтов. Именно там сформировался его тяжелый взгляд, который теперь боятся подчиненные.`,
 
     `ГЛАВА 4: Роковая ошибка и шрамы.
-Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и ментальное.`,
+Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и mental-ьное.`,
 
     `ГЛАВА 5: Знакомство с трубкой.
 Горький табак стал единственным средством заглушить постоянный запах гари в воспоминаниях. Дым скрывал эмоции, которые профессионалу показывать нельзя.`,
@@ -318,7 +317,7 @@ const DOM = {
     logosBox: document.getElementById('logos-box')
 };
 
-let step = 'menu'; // 'menu', 'reading_bio', 'bio_finished', 'dialogue_1', 'dialogue_2', 'dialogue_3'
+let step = 'menu'; 
 let currentChapterIdx = 0;
 let isMask = false;
 let isPrinting = false;
@@ -398,7 +397,6 @@ async function showMainMenu() {
     DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
     DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
     
-    // Сброс шапки к дефолтной белой иконке Atlantis
     DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">';
     
     DOM.out.innerHTML = "";
@@ -418,7 +416,7 @@ async function printNextChapter() {
         if (currentChapterIdx < BIO_CHAPTERS.length) {
             ask('ХАБ // НАЖМИТЕ [ENTER] ДЛЯ СЛЕДУЮЩЕЙ ГЛАВЫ...', false);
         } else {
-            // Остановка после 10-й главы: даем человеку дочитать до конца
+            // Контрольная пауза после 10 главы
             step = 'bio_finished';
             addLine("\n---------------------------------------------------", "gray");
             await typeTerminal("ДОСЬЕ ПОЛНОСТЬЮ СКОПИРОВАНО В БУФЕР ПАМЯТИ.", "success");
@@ -434,12 +432,12 @@ async function runDialogueStage1() {
     DOM.hd.style.borderBottomColor = "var(--color-bordo)";
     DOM.blk.style.borderTopColor = "var(--color-bordo)";
     
-    // Сцена 1: Только один круг logoLAS (перекрашенный в бордовый через CSS класс)
+    // Вывод первой темно-бордовой иконки
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">';
     
     playBeep(220, 'sawtooth', 0.4);
-    await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
-    await typeTerminal("...А ты знаешь, кто на самом деле виновник той трагедии на Итагурской АЭС?", "txt-bordo", CFG.SPD_DIALOGUE);
+    await typeTerminal("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
+    await typeTerminal("...А ты знаешь, кто на самом деле виновник той трагемии на Итагурской АЭС?", "txt-bordo", CFG.SPD_DIALOGUE);
     
     ask('ДЕПАРТАМЕНТ L.a.S // НАЖМИТЕ [ENTER]...', false);
 }
@@ -448,7 +446,7 @@ async function runDialogueStage2() {
     step = 'dialogue_2';
     DOM.term.className = "terminal-box stage-split-2";
     
-    // Сцена 2: Сохраняем бордовый и добавляем рядом идеально равный желтый logoART
+    // Мягкое добавление второй иконки рядом
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
                              '<img src="logoART.png" class="hub-logo logo-art" alt="ART">';
     
@@ -463,7 +461,7 @@ async function runDialogueStage3() {
     step = 'dialogue_3';
     DOM.term.className = "terminal-box stage-split-3";
     
-    // Сцена 3: Удерживаем старые и выстраиваем в ряд третий равный красный круг logoTFB
+    // Мягкое добавление третьей иконки в ряд
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
                              '<img src="logoART.png" class="hub-logo logo-art" alt="ART">' +
                              '<img src="logoTFB.png" class="hub-logo logo-tfb" alt="TFB">';
@@ -517,7 +515,7 @@ DOM.inp.onkeydown = async (e) => {
     else if (step === 'bio_finished') {
         DOM.blk.classList.remove('active'); 
         DOM.inp.disabled = true;
-        await runDialogueStage1(); // Игрок дочитал 10 главу и сам перешел к первому вопросу
+        await runDialogueStage1(); 
     }
     else if (step === 'dialogue_1') {
         DOM.blk.classList.remove('active'); 
