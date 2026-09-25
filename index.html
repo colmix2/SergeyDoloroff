@@ -33,44 +33,15 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            transition: background 1s ease;
+            transition: background 1.5s ease;
         }
 
-        /* Эффект жесткого атмосферного затемнения по бокам экрана (Контузия) */
-        body.shock-vignette {
-            background: radial-gradient(circle, #000000 30%, #050002 70%, #000000 100%);
-        }
-        body.shock-vignette::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.95), inset 0 0 100px rgba(94, 11, 33, 0.3);
-            z-index: 999;
-            pointer-events: none;
-            animation: pulseVignette 2s infinite alternate;
-        }
-
-        @keyframes pulseVignette {
-            0% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-        
         @keyframes shake {
             0%, 100% { transform: translate(0, 0); }
             20%, 60% { transform: translate(-4px, 2px); }
             40%, 80% { transform: translate(4px, -2px); }
         }
         .shake { animation: shake 0.2s ease-in-out 2; }
-        
-        /* Бесконечная жесткая судорога терминала при уничтожении базы */
-        @keyframes deathGlitch {
-            0%, 100% { transform: translate(0,0) skewX(0deg); filter: brightness(1); }
-            10% { transform: translate(-2px, 1px) skewX(-0.5deg); filter: brightness(1.2); }
-            20% { transform: translate(2px, -1px) skewX(0.5deg); }
-            30% { transform: translate(0, 0); filter: brightness(0.9); }
-            95% { transform: translate(1px, 1px); }
-        }
-        .terminal-death { animation: deathGlitch 0.15s infinite; }
 
         #intro-screen {
             position: fixed;
@@ -117,12 +88,14 @@
             flex-direction: column;
             overflow: hidden;
             opacity: 0;
-            transition: opacity 1s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+            transition: opacity 3s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
+        /* Неоновые рамки этапов откровения */
         .terminal-box.stage-bordo {
             border-color: var(--color-bordo) !important;
             box-shadow: 0 0 20px var(--color-bordo), inset 0 0 10px var(--color-bordo) !important;
+            border-image: none !important;
         }
         .terminal-box.stage-split-2 {
             border-style: solid;
@@ -135,6 +108,15 @@
             border-width: 2px;
             border-image: linear-gradient(to right, var(--color-bordo) 33%, var(--color-yellow) 33%, var(--color-yellow) 66%, var(--color-red) 66%) 1 !important;
             box-shadow: -15px 0 25px var(--color-bordo), 0 0 25px var(--color-yellow), 15px 0 25px var(--color-red) !important;
+        }
+
+        /* ЭФФЕКТ ДЕПРЕССИВНОЙ УБИТОЙ КОНСОЛИ */
+        .terminal-box.dead-console {
+            border-color: #444444 !important;
+            border-image: none !important;
+            box-shadow: none !important;
+            opacity: 0.35 !important; /* Сильное затухание всей консоли */
+            filter: grayscale(100%);
         }
 
         .header {
@@ -152,12 +134,12 @@
             transition: border-bottom-color 0.5s ease, color 0.5s ease, font-size 0.5s ease;
         }
         
+        /* Изменение заголовка при шоке */
         .header.shock-text {
-            color: #ffffff !important;
+            color: #888888 !important;
             font-size: 22px !important;
             letter-spacing: 2px !important;
-            border-bottom-color: rgba(255, 17, 17, 0.4) !important;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            border-bottom-color: #333333 !important;
         }
 
         .logo-container {
@@ -218,6 +200,9 @@
         .txt-bordo { color: #cc1144 !important; font-weight: bold; text-shadow: 0 0 4px rgba(204, 17, 68, 0.4); }
         .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; text-shadow: 0 0 4px rgba(255, 204, 0, 0.4); }
         .txt-red { color: var(--color-red) !important; font-weight: bold; text-shadow: 0 0 5px rgba(255, 17, 17, 0.5); }
+
+        /* Депрессивный серый цвет для системного дампа мертвой консоли */
+        .txt-dead { color: #777777 !important; font-weight: normal; }
 
         .input-line {
             display: flex;
@@ -305,12 +290,13 @@ const CFG = {
     SPD_INTRO: 30,
     SPD_TERMINAL: 15,
     SPD_BIO: 5,
-    SPD_DIALOGUE: 25
+    SPD_DIALOGUE: 25,
+    SPD_DEAD: 40 // Заброшенная консоль печатает очень медленно и тяжело
 };
 
 const BIO_CHAPTERS = [
     `ГЛАВА 1: Рождение в трущобах.
-Детство Сергея проходило среди серых промзон и фабричного дыма. С ранних лет ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
+Детство Сергея проходило среди серых промзон и фабричного дыма. С ранней юности ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
 
     `ГЛАВА 2: Первая кровь и суровые уроки.
 Уличные потасовки быстро переросли в нечто большее. Сломанный нос, первые шрамы и осознание того, что единственный способ выжить — стать умнее и жестче окружающих.`,
@@ -337,7 +323,7 @@ const BIO_CHAPTERS = [
 Отдел уважает его не за мягкость, а за то, что он никогда не прячется за чужие спины. Командир, готовый лично пойти в авангарде.`,
 
     `ГЛАВА 10: Настоящее время.
-Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, and построил собственный бастион. Конец досье.`
+Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
 ];
 
 const DOM = { 
@@ -372,35 +358,18 @@ function playBeep(f, t, d) {
     } catch(e) {}
 }
 
-function playSiren(duration) {
-    try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(90, audioCtx.currentTime);
-        osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + duration);
-        g.gain.setValueAtTime(0.03, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
-    } catch(e){}
-}
-
-function addLine(txt, cls = "") {
-    const d = document.createElement('div'); d.className = `line ${cls}`; d.textContent = txt; 
-    DOM.out.appendChild(d); DOM.out.scrollTop = DOM.out.scrollHeight; return d;
-}
-
-async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL) {
+async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL, withBeep = true) {
     isPrinting = true;
     const d = addLine("", cls);
     for (let i = 0; i < txt.length; i++) {
         d.textContent += txt.charAt(i); 
-        if (Math.random() > 0.3) playBeep(840, 'square', 0.015); 
+        if (withBeep && Math.random() > 0.3) playBeep(840, 'square', 0.015); 
         await delay(speed);
     }
     DOM.out.scrollTop = DOM.out.scrollHeight;
     isPrinting = false;
 }
+
 async function typeAnimateDialogue(txt, cls = "") {
     isPrinting = true;
     const d = addLine("", cls);
@@ -415,7 +384,6 @@ async function typeAnimateDialogue(txt, cls = "") {
     DOM.out.scrollTop = DOM.out.scrollHeight;
     isPrinting = false;
 }
-
 async function typeIntro(txt, startLogo = false) {
     if (startLogo) DOM.introLogo.style.opacity = "1";
     for (let i = 0; i < txt.length; i++) {
@@ -457,7 +425,6 @@ async function runCinematicIntro() {
 async function showMainMenu() {
     step = 'menu';
     DOM.term.className = "terminal-box";
-    document.body.className = "";
     DOM.hd.className = "header";
     DOM.titleText.textContent = 'P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK';
     DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
@@ -496,7 +463,7 @@ async function runDialogueStage1() {
     DOM.blk.style.borderTopColor = "var(--color-bordo)";
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">';
     
-    playBeep(180, 'sawtooth', 0.5);
+    playBeep(180, 'sawtooth', 0.4);
     await typeAnimateDialogue("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
     await typeAnimateDialogue("...А ты знаешь, кто на самом деле виновник той трагедии на Итагурской АЭС?", "txt-bordo");
     ask('ДЕПАРТАМЕНТ L.a.S // НАЖМИТЕ [ENTER]...', false);
@@ -508,7 +475,7 @@ async function runDialogueStage2() {
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
                              '<img src="logoART.png" class="hub-logo logo-art" alt="ART">';
     
-    playBeep(210, 'sawtooth', 0.5);
+    playBeep(210, 'sawtooth', 0.4);
     await typeAnimateDialogue("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ ART]:", "txt-yellow");
     await typeAnimateDialogue("...А ты знаешь, что Гилберта можно было спасти, а не убивать?", "txt-yellow");
     ask('ДЕПАРТАМЕНТ ART // НАЖМИТЕ [ENTER]...', false);
@@ -526,41 +493,47 @@ async function runDialogueStage3() {
     await typeAnimateDialogue("...А ты знаешь, что он убивал бойцов Расонии во втором секторе, когда те были согласны на перемирие?", "txt-red");
     
     addLine("\n---------------------------------------------------", "gray");
-    ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ СТРУКТУРНОГО ПЕРЕХОДА...', false);
+    ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ ОБРЫВА КАНАЛА...', false);
 }
 
-async function runTerminalDestruction() {
+// МЕДЛЕННОЕ ЗАТЕМНЕНИЕ И ПЕРЕРОЖДЕНИЕ В ЗАБРОШЕННУЮ КОНСОЛЬ
+async function runTerminalFadeOut() {
     step = 'terminal_destroyed';
-    document.body.classList.add('shock-vignette');
-    DOM.term.classList.add('terminal-death');
+    
+    // Медленно тушим текущую консоль в полный ноль
+    DOM.term.style.opacity = "0";
+    await delay(3000); // 3 секунды полной темноты и тишины
+
+    // Перестраиваем шапку и зачищаем логи под мертвый терминал
+    DOM.logosBox.innerHTML = ''; 
     DOM.hd.classList.add('shock-text');
     DOM.titleText.textContent = "Что за херня..?";
+    DOM.out.innerHTML = "";
     
-    playSiren(8);
-    
-    addLine("\n===================================================", "error");
-    await typeTerminal("🚨 [ВНИМАНИЕ] ОБНАРУЖЕНА КРИТИЧЕСКАЯ АНОМАЛИЯ ЯДРА БАЗЫ ДАННЫХ!", "error");
-    await typeTerminal("🚨 [СИГНАЛ SOS]: ДЕСТРУКТИВНЫЙ ВСПЛЕСК В СЕКТОРЕ УПРАВЛЕНИЯ ATLANTIS.", "error");
-    addLine("===================================================\n", "error");
-    await delay(1000);
-
-    await typeTerminal(">>> МОНИТОРИНГ ЖИЗНЕННЫХ ПОКАЗАТЕЛЕЙ СЕКТОРОВ ЧВК:", "gray");
-    await delay(500);
-    await typeTerminal("[-] БЛОК ПОСТ 'АВАНГАРД-1' ... [СВЯЗЬ ПОТЕРЯНА]", "error");
-    await typeTerminal("[-] ОПЕРАТИВНИК КЕЙН (ID-711) .. ПУЛЬС: 00 BPM [МЕРТВ]", "error");
-    await typeTerminal("[-] ОПЕРАТИВНИК РЕЙД (ID-402) .. ПУЛЬС: 00 BPM [МЕРТВ]", "error");
-    await delay(800);
-    
-    await typeTerminal("\n>>> ВТОРЖЕНИЕ В ЦЕНТРАЛЬНЫЙ ОТДЕЛ УПРАВЛЕНИЯ ГСБ...", "gray");
-    await typeTerminal("🚨 СИСТЕМА ЖИЗНЕОБЕСПЕЧЕНИЯ КАБИНЕТА КОМАНДОВАНИЯ СОРВАНА.", "error");
-    await typeTerminal("🚨 ЗАФИКСИРОВАНА П П С ПОЛНАЯ ПОТЕРЯ СИГНАЛА С ОПЕРАТОРОМ СЕРГЕЕМ.", "error");
-    await delay(1200);
-
-    addLine("\n---------------------------------------------------", "gray");
-    await typeTerminal("ДАННЫЕ ЧВК ATLANTIS УНИЧТОЖЕНЫ. ТЕРМИНАЛ ЗАБЛОКИРОВАН.", "gray");
-    
+    // Убираем строку ввода навсегда
     DOM.blk.classList.remove('active'); 
     DOM.inp.disabled = true;
+
+    // Проявляем консоль заново, но теперь она блеклая, серая и заброшенная
+    DOM.term.className = "terminal-box dead-console";
+    DOM.term.style.opacity = "0.35";
+    await delay(500);
+
+    // Тяжелый, медленный вывод системного аварийного лога (БЕЗ БИПОВ, полная тишина)
+    await typeTerminal("--- АВАРИЙНЫЙ ДАМП ПАМЯТИ ЯДРА СЕКТОРНОЙ СЕТИ ATLANTIS ---", "txt-dead", CFG.SPD_DEAD, false);
+    await delay(600);
+    await typeTerminal("[КРИТИЧЕСКИЙ СБОЙ]: Потеря связи с внешним шлюзом управления.", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("[КРИТИЧЕСКИЙ СБОЙ]: Жизнеобеспечение кабинета ГСБ ... ОТКЛЮЧЕНО.", "txt-dead", CFG.SPD_DEAD, false);
+    await delay(800);
+    
+    await typeTerminal("\n[ДАННЫЕ БИОМЕТРИИ ОПЕРАТИВНИКОВ ОТДЕЛЕНИЯ]:", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("[-] Офицер Сергей Долорофф (ID-001) ... СТАТУС: АСИСТОЛИЯ (00 BPM)", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("[-] Оперативник Кейн (ID-711) ......... СТАТУС: ЛЕТАЛЬНЫЙ (00 BPM)", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("[-] Оперативник Рейд (ID-402) ......... СТАТУС: ЛЕТАЛЬНЫЙ (00 BPM)", "txt-dead", CFG.SPD_DEAD, false);
+    await delay(1000);
+
+    await typeTerminal("\n[ВНИМАНИЕ]: Все жизненные показатели сектора равны нулю.", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("[СИСТЕМА]: Принудительная изоляция узла. База данных заброшена.", "txt-dead", CFG.SPD_DEAD, false);
 }
 
 DOM.inp.oninput = () => { 
@@ -618,7 +591,7 @@ DOM.inp.onkeydown = async (e) => {
     else if (step === 'dialogue_3') {
         DOM.blk.classList.remove('active'); 
         DOM.inp.disabled = true;
-        await runTerminalDestruction();
+        await runTerminalFadeOut(); // Запускаем фазу полного затемнения и перерождения
     }
 };
 
