@@ -36,6 +36,7 @@
             transition: background 1.5s ease;
         }
 
+        /* Центрированный кинематографичный интро-экран */
         #intro-screen {
             position: fixed;
             inset: 0;
@@ -50,6 +51,7 @@
             transition: opacity 1s ease;
         }
         
+        /* Логотип жестко зажат в размерах и не ломает верстку */
         #intro-logo {
             width: 180px;
             height: 180px;
@@ -62,6 +64,7 @@
             display: block;
         }
         
+        /* Крупный читаемый текст по центру */
         #intro-text {
             width: 100%;
             max-width: 800px;
@@ -104,13 +107,12 @@
             background-image: url('blood.png');
             background-size: cover;
             background-position: center;
-            opacity: 0; /* Проявится в финале */
-            z-index: 1;  /* Строго позади контента */
+            opacity: 0; 
+            z-index: 1;  
             pointer-events: none;
             transition: opacity 3s ease;
         }
 
-        /* Контент принудительно выносим вперед, чтобы кровь не перекрывала буквы */
         .terminal-content {
             position: relative;
             z-index: 2;
@@ -140,23 +142,24 @@
             box-shadow: -15px 0 25px var(--color-bordo), 0 0 25px var(--color-yellow), 15px 0 25px var(--color-red) !important;
         }
 
-        /* Анимация мелких аналоговых глитчей и мерцания для убитой консоли */
-        @keyframes glitchVibration {
-            0%, 100% { transform: translate(0, 0); opacity: 0.35; filter: grayscale(100%); }
-            5% { transform: translate(-1px, 1px); opacity: 0.4; }
-            10% { transform: translate(1px, -1px); opacity: 0.3; }
-            15% { transform: translate(0, 0); }
-            25% { opacity: 0.25; filter: grayscale(90%) contrast(80%); }
-            26% { opacity: 0.4; }
+        /* Медленное, плавное угасание и потеря контраста */
+        @keyframes staticDepression {
+            0%, 100% { opacity: 0.35; filter: grayscale(100%) contrast(100%); }
+            50% { opacity: 0.20; filter: grayscale(100%) contrast(75%); }
         }
         
         .terminal-box.dead-console {
-            border-color: #444444 !important;
+            border-color: #333333 !important;
             border-image: none !important;
             box-shadow: none !important;
-            animation: glitchVibration 0.3s infinite; /* Небольшие постоянные глюки */
+            animation: staticDepression 4s ease-in-out infinite; 
         }
 
+        .terminal-box.dead-console.active-confession {
+            opacity: 0.75 !important;
+            animation: none !important;
+            transition: opacity 0.5s ease;
+        }
         .header {
             color: var(--glow);
             border-bottom: 2px solid rgba(255, 255, 255, 0.2);
@@ -173,7 +176,7 @@
         }
         
         .header.shock-text {
-            color: #777777 !important;
+            color: #666666;
             font-size: 22px !important;
             letter-spacing: 2px !important;
             border-bottom-color: #222222 !important;
@@ -189,8 +192,8 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9) rotate(-5deg); }
-            to { opacity: 0.95; transform: scale(1) rotate(0deg); }
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 0.95; transform: scale(1); }
         }
         
         .hub-logo {
@@ -226,18 +229,21 @@
         }
 
         @keyframes blurIn {
-            from { filter: blur(6px); opacity: 0; text-shadow: 0 0 10px currentColor; }
-            to { filter: blur(0px); opacity: 1; text-shadow: none; }
+            from { filter: blur(4px); opacity: 0; }
+            to { filter: blur(0px); opacity: 1; }
         }
         .char-anim {
             display: inline-block;
             animation: blurIn 0.4s ease forwards;
         }
         
-        .txt-bordo { color: #cc1144 !important; font-weight: bold; text-shadow: 0 0 4px rgba(204, 17, 68, 0.4); }
-        .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; text-shadow: 0 0 4px rgba(255, 204, 0, 0.4); }
-        .txt-red { color: var(--color-red) !important; font-weight: bold; text-shadow: 0 0 5px rgba(255, 17, 17, 0.5); }
-        .txt-dead { color: #666666 !important; font-weight: normal; }
+        .txt-bordo { color: #cc1144 !important; font-weight: bold; text-shadow: 0 0 4px rgba(204, 17, 68, 0.2); }
+        .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; text-shadow: 0 0 4px rgba(255, 204, 0, 0.2); }
+        .txt-red { color: var(--color-red) !important; font-weight: bold; text-shadow: 0 0 5px rgba(255, 17, 17, 0.3); }
+        .txt-dead { color: #555555 !important; font-weight: normal; }
+        
+        .txt-sergey { color: #e0e0e0 !important; font-weight: bold; }
+        .txt-anon { color: #a0a0a0 !important; font-style: italic; }
 
         .input-line {
             display: flex;
@@ -305,10 +311,8 @@
 </div>
 
 <div class="terminal-box" id="term">
-    <!-- Слой капель крови позади текста логов -->
     <div class="blood-overlay" id="blood-bg"></div>
     
-    <!-- Основной изолированный контейнер интерфейса -->
     <div class="terminal-content">
         <div class="header" id="hd">
             <div class="logo-container" id="logos-box">
@@ -332,40 +336,9 @@ const CFG = {
     SPD_TERMINAL: 15,
     SPD_BIO: 5,
     SPD_DIALOGUE: 25,
-    SPD_DEAD: 40
+    SPD_DEAD: 50,
+    SPD_MONOLOGUE: 35 
 };
-
-const BIO_CHAPTERS = [
-    `ГЛАВА 1: Рождение в трущобах.
-Детство Сергея проходило среди серых промзон и фабричного дыма. С ранней юности ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
-
-    `ГЛАВА 2: Первая кровь и суровые уроки.
-Уличные потасовки быстро переросли в нечто большее. Сломанный нос, первые шрамы и осознание того, что единственный способ выжить — стать умнее и жестче окружающих.`,
-
-    `ГЛАВА 3: Военный контракт.
-Армия стала для него спасением от тюрьмы, но бросила в самое пекло локальных конфликтов. Именно там сформировался его тяжелый взгляд, который теперь боятся подчиненные.`,
-
-    `ГЛАВА 4: Роковая ошибка и шрамы.
-Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и ментальное.`,
-
-    `ГЛАВА 5: Знакомство с трубкой.
-Горький табак стал единственным средством заглушить постоянный запах гари в воспоминаниях. Дым скрывал эмоции, которые профессионалу показывать нельзя.`,
-
-    `ГЛАВА 6: Переход под крыло Atlantis.
-ЧВК заметила перспективного оперативника с железной дисциплиной. Ему предложили работу, где не задают лишних вопросов, а просто ликвидируют угрозы.`,
-
-    `ГЛАВА 7: Из грязи в командиры.
-Годы безупречной службы, сотни выполненных контрактов. Сергей поднимался по карьерной лестнице, оставляя за спиной горы выжженной земли.`,
-
-    `ГЛАВА 8: За кулисами штаба.
-Управление целым отделом ГСБ требует больше хладнокровия, чем стрельба. Враги теперь плели интриги в кабинетах, а не прятались в окопах.`,
-
-    `ГЛАВА 9: Уважение, выжженное сталью.
-Отдел уважает его не за мягкость, а за то, что он никогда не прячется за чужие спины. Командир, готовый лично пойти в авангарде.`,
-
-    `ГЛАВА 10: Настоящее время.
-Today он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
-];
 
 const DOM = { 
     term: document.getElementById('term'), inp: document.getElementById('inp'), 
@@ -387,6 +360,7 @@ let isPrinting = false;
 const delay = ms => new Promise(r => setTimeout(r, ms));
 let audioCtx = null;
 
+// Системные функции вывода подняты вверх для стабильности инициализации
 function playBeep(f, t, d) {
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -398,6 +372,19 @@ function playBeep(f, t, d) {
         osc.connect(g); g.connect(audioCtx.destination); 
         osc.start(); osc.stop(audioCtx.currentTime + d);
     } catch(e) {}
+}
+
+function playSiren(duration) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(55, audioCtx.currentTime + duration);
+        g.gain.setValueAtTime(0.02, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    } catch(e){}
 }
 
 function addLine(txt, cls = "") {
@@ -431,6 +418,38 @@ async function typeAnimateDialogue(txt, cls = "") {
     DOM.out.scrollTop = DOM.out.scrollHeight;
     isPrinting = false;
 }
+const BIO_CHAPTERS = [
+    `ГЛАВА 1: Рождение в трущобах.
+Детство Сергея проходило среди серых промзон и фабричного дыма. С ранней юности ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
+
+    `ГЛАВА 2: Первая кровь и суровые уроки.
+Уличные потасовки быстро переросли в нечто большее. Сломанный нос, первые шрамы и осознание того, что единственный способ выжить — стать умнее и жестче окружающих.`,
+
+    `ГЛАВА 3: Военный контракт.
+Армия стала для него спасением от тюрьмы, но бросила в самое пекло локальных конфликтов. Именно там сформировался его тяжелый взгляд, который теперь боятся подчиненные.`,
+
+    `ГЛАВА 4: Роковая ошибка и шрамы.
+Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и ментальное.`,
+
+    `ГЛАВА 5: Знакомство с трубкой.
+Горький табак стал единственным средством заглушить постоянный запах гари в воспоминаниях. Дым скрывал эмоции, которые профессионалу показывать нельзя.`,
+
+    `ГЛАВА 6: Переход под крыло Atlantis.
+ЧВК заметила перспективного оперативника с железной дисциплиной. Ему предложили работу, где не задают лишних вопросов, а просто ликвидируют угрозы.`,
+
+    `ГЛАВА 7: Из грязи в командиры.
+Годы безупречной службы, сотни выполненных контрактов. Сергей поднимался по карьерной лестнице, оставляя за спиной горы выжженной земли.`,
+
+    `ГЛАВА 8: За кулисами штаба.
+Управление целым отделом ГСБ требует больше хладнокровия, чем стрельба. Враги теперь плели интриги в кабинетах, а не прятались в окопах.`,
+
+    `ГЛАВА 9: Уважение, выжженное сталью.
+Отдел уважает его не за мягкость, а за то, что он никогда не прячется за чужие спины. Командир, готовый лично пойти в авангарде.`,
+
+    `ГЛАВА 10: Настоящее время.
+Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
+];
+
 async function typeIntro(txt, startLogo = false) {
     if (startLogo) DOM.introLogo.style.opacity = "1";
     for (let i = 0; i < txt.length; i++) {
@@ -477,7 +496,7 @@ async function showMainMenu() {
     DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
     DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
     DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">';
-    DOM.bloodBg.style.opacity = "0"; // Прячем кровь в главном меню
+    DOM.bloodBg.style.opacity = "0"; 
     
     DOM.out.innerHTML = "";
     await typeTerminal("PMC ATLANTIS // CENTRAL CORE TERMINAL v4.0", "success");
@@ -541,11 +560,11 @@ async function runDialogueStage3() {
     await typeAnimateDialogue("...А ты знаешь, что он убивал бойцов Расонии во втором секторе, когда те были согласны на перемирие?", "txt-red");
     
     addLine("\n---------------------------------------------------", "gray");
-    ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ ОБРЫВА КАНАЛА...', false);
+    ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ СТРУКТУРНОГО ПЕРЕХОДА...', false);
 }
 
 async function runTerminalFadeOut() {
-    step = 'terminal_destroyed';
+    step = 'sergey_confession_init';
     DOM.term.style.opacity = "0";
     await delay(3000); 
 
@@ -553,35 +572,91 @@ async function runTerminalFadeOut() {
     DOM.hd.classList.add('shock-text');
     DOM.titleText.textContent = "Что за херня..?";
     DOM.out.innerHTML = "";
-    
-    DOM.blk.classList.remove('active'); 
-    DOM.inp.disabled = true;
 
-    // Включаем депрессивный глитч-класс консоли
     DOM.term.className = "terminal-box dead-console";
-    
-    // Плавно проявляем капли крови blood.png позади текста (прозрачность 0.25)
-    DOM.bloodBg.style.opacity = "0.25";
+    DOM.bloodBg.style.opacity = "0.20";
     await delay(500);
+
+    playSiren(6);
 
     await typeTerminal("--- АВАРИЙНЫЙ ДАМП ПАМЯТИ ЯДРА СЕКТОРНОЙ СЕТИ ATLANTIS ---", "txt-dead", CFG.SPD_DEAD, false);
     await delay(600);
     await typeTerminal("[КРИТИЧЕСКИЙ СБОЙ]: Потеря связи с внешним шлюзом управления.", "txt-dead", CFG.SPD_DEAD, false);
-    await typeTerminal("[КРИТИЧЕСКИЙ СБОЙ]: Жизнеобеспечение кабинета ГСБ ... ОТКЛЮЧЕНО.", "txt-dead", CFG.SPD_DEAD, false);
-    await delay(800);
+    await delay(500);
     
     await typeTerminal("\n[ДАННЫЕ БИОМЕТРИИ ОПЕРАТИВНИКОВ ОТДЕЛЕНИЯ]:", "txt-dead", CFG.SPD_DEAD, false);
-    await typeTerminal("[-] Офицер Сергей Долорофф (ID-001) ... СТАТУС: АСИСТОЛИЯ (00 BPM)", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("[-] Офицер Сергей Долорофф (ID-001) ... СТАТУС: ТРЕКЕР УНИЧТОЖЕН / ОБОРВАН", "error", CFG.SPD_DEAD, false);
     await typeTerminal("[-] Оперативник Кейн (ID-711) ......... СТАТУС: ЛЕТАЛЬНЫЙ (00 BPM)", "txt-dead", CFG.SPD_DEAD, false);
     await typeTerminal("[-] Оперативник Рейд (ID-402) ......... СТАТУС: ЛЕТАЛЬНЫЙ (00 BPM)", "txt-dead", CFG.SPD_DEAD, false);
-    await delay(1000);
+    await delay(800);
 
-    await typeTerminal("\n[ВНИМАНИЕ]: Все жизненные показатели сектора равны нулю.", "txt-dead", CFG.SPD_DEAD, false);
-    await typeTerminal("[СИСТЕМА]: Принудительная изоляция узла. База данных заброшена.", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("\n[ВНИМАНИЕ]: Перехват удаленного лога принудительного шифрования. Нажмите [ENTER]...", "error", CFG.SPD_DEAD, false);
+    ask('ОБНАРУЖЕНА ЗАПИСЬ // НАЖМИТЕ [ENTER]...', false);
+}
+async function runSergeyConfessionDialogue() {
+    step = 'sergey_confession_playing';
+    DOM.term.classList.add('active-confession'); 
+    
+    await typeTerminal("[УДЕЛЕННЫЙ ПЕРЕХВАТ КАНАЛА ШИФРОВАНИЯ...]", "txt-anon", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("???: Я не успею все зашифровать..", "txt-anon", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("???: Я правда не хотел чтобы это произошло..", "txt-anon", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("???: Я просто выполнял свою работу, я не хотел убивать Гилберта, я не хотел взрывать АЭС или расстреливать Расонийцев. Я просто боролся за свою жизнь..", "txt-anon", CFG.SPD_MONOLOGUE, false);
+    await delay(1000);
+    
+    await typeTerminal("\nСергей: Я, Сергей, признаю что это все моих рук дело. Потеряв мать я опустил руки. У меня не было смысла жизни. ", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Я хотел пойти по стопам матери.. Сдать юридический, стать лучшим адвокатом, доказывать невиновность людей. А щас что? А какой смысл идти куда-то дальше? Я все потерял что имел. Я стал пить, курить, не имею образования, семья разрушена..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    
+    await showBranchOptions();
+}
+
+async function showBranchOptions() {
+    step = 'branch_selection';
+    DOM.term.className = "terminal-box dead-console"; 
+    addLine("\n---------------------------------------------------", "gray");
+    await typeTerminal("ВЫБЕРИТЕ НАПРАВЛЕНИЕ АНАЛИЗА АУДИОЛОГОВ:", "success", CFG.SPD_TERMINAL, false);
+    await typeTerminal("А) Что случилось с твоей семьей?", "txt-sergey", CFG.SPD_TERMINAL, false);
+    await typeTerminal("Б) Почему ты не смог стать юристом?", "txt-sergey", CFG.SPD_TERMINAL, false);
+    await typeTerminal("В) Можешь ли ты мне дать все отчёты Итагурской?", "txt-sergey", CFG.SPD_TERMINAL, false);
+    ask('ВВЕДИТЕ ВАРИАНТ (А, Б или В):', false);
+}
+
+async function runBranchA() {
+    step = 'branch_processing';
+    DOM.term.classList.add('active-confession');
+    addLine("");
+    await typeTerminal("Сергей: Мне было 16. Я закончил 9 класс и решил погулять со своими друзьями до поздна. Я много раз конфликтовал с мамой когда она была пьяна, орал, говорил что она сама ничего не добилась и не стану как она. Но когда она трезвая, мы как семья. Она мне написала чтобы я вернулся домой и начала доставать, я сказал чтобы она шла нахуй пока не отрезвеет..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: When я пришел домой я заметил ее лежащей среди бутылок. Я перевернул ее лицом к себе и заметил, что она не смотрит на меня и не отвечает..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Приложив два пальца к шее, я понял что у нее нет пульса..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Я.. Я правда.. Я правда жалею что я такой ублюдок, я не знал цены и не знал кто такая Мать. Я виноват, я тварь, я просто ненавижу блядь, презираю свое существование..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Я позвонил в скорую и мне сказали что ее не удалось спасти..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Папа много работал, у него не было времени проводить со мной время. Он всегда был занят своей работой, он пахал чтобы просто обеспечить меня моими хотелками, хотя он не понимал, что мне просто нужно его внимание..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await showBranchOptions();
+}
+
+async function runBranchB() {
+    step = 'branch_processing';
+    DOM.term.classList.add('active-confession');
+    addLine("");
+    await typeTerminal("Сергей: После смерти моей мамы, я начал сильно пить. У меня развилась алкогольная амнезия и зависимость..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Пытаясь глушить свою боль и зависимость я стал курить. Я решил быть как дедушка, взял трубку да попробовал курить с нее. И мне понравилось..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Я может и не самый лучший ребенок, скорее, я вообще не имел право получить высшее образование, судьба наделила меня этим, чтобы я воевал чтобы заглушить свою боль и получить хоть какие то деньги..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Я не смог поступить, эти зависимости меня гасили. Постоянные опаздывания, хамство с преподами, кураторами..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Лучше бы я сдох на Итагурской..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await showBranchOptions();
+}
+
+async function runBranchV() {
+    step = 'branch_processing';
+    DOM.term.classList.add('active-confession');
+    addLine("");
+    await typeTerminal("Сергей: Это не так просто. После собеседования комитета между тремя департаментами, отчеты разделились на 3 группы..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Департамент L.a.S имел все отчёты что происходило на Итагурской. Департамент A.R.T имел все отчёты умерших бойцов, экспериментов и отчёты изучений вируса WE-30. Департамент T.F.B имел все отчёты что связано с линиями фронта, бойцов..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await typeTerminal("Сергей: Я обладаю паролями департаментов, но не их консоли. L.a.S 577, T.F.B 687, A.R.T 432", "txt-sergey", CFG.SPD_MONOLOGUE, false);
+    await showBranchOptions();
 }
 
 DOM.inp.oninput = () => { 
-    if(step === 'menu') {
+    if(step === 'menu' || step === 'branch_selection') {
         DOM.view.textContent = isMask ? "*".repeat(DOM.inp.value.length) : DOM.inp.value; 
     } else {
         DOM.view.textContent = "";
@@ -590,52 +665,62 @@ DOM.inp.oninput = () => {
 
 DOM.inp.onkeydown = async (e) => {
     if (e.key !== 'Enter' || isPrinting) return;
-    const v = DOM.inp.value, cv = v.trim();
+    const v = DOM.inp.value, cv = v.trim().toUpperCase();
 
     if (step === 'menu') {
         if (!v) return;
-        DOM.blk.classList.remove('active'); 
-        DOM.inp.disabled = true; 
-        addLine(DOM.pr.textContent + " " + cv, 'success'); 
-        await delay(300);
+        DOM.blk.classList.remove('active'); DOM.inp.disabled = true; 
+        addLine(DOM.pr.textContent + " " + v, 'success'); await delay(300);
 
-        if (cv === '1') {
-            currentChapterIdx = 0;
-            DOM.out.innerHTML = "";
-            await printNextChapter();
+        if (v.trim() === '1') {
+            currentChapterIdx = 0; DOM.out.innerHTML = ""; await printNextChapter();
         } else {
-            DOM.term.classList.add('shake');
-            playBeep(130, 'triangle', 0.35);
+            DOM.term.classList.add('shake'); playBeep(130, 'triangle', 0.35);
             setTimeout(() => DOM.term.classList.remove('shake'), 400);
-            addLine("ОШИБКА: НЕВЕРНЫЙ ВЫБОР", "error");
-            await delay(1000);
-            await showMainMenu();
+            addLine("ОШИБКА: НЕВЕРНЫЙ ВЫБОР", "error"); await delay(1000); await showMainMenu();
         }
     } 
     else if (step === 'reading_bio') {
-        DOM.blk.classList.remove('active'); 
-        DOM.inp.disabled = true;
+        DOM.blk.classList.remove('active'); DOM.inp.disabled = true;
         await printNextChapter();
     }
     else if (step === 'bio_finished') {
-        DOM.blk.classList.remove('active'); 
-        DOM.inp.disabled = true;
+        DOM.blk.classList.remove('active'); DOM.inp.disabled = true;
         await runDialogueStage1(); 
     }
     else if (step === 'dialogue_1') {
-        DOM.blk.classList.remove('active'); 
-        DOM.inp.disabled = true;
+        DOM.blk.classList.remove('active'); DOM.inp.disabled = true;
         await runDialogueStage2();
     }
     else if (step === 'dialogue_2') {
-        DOM.blk.classList.remove('active'); 
-        DOM.inp.disabled = true;
+        DOM.blk.classList.remove('active'); DOM.inp.disabled = true;
         await runDialogueStage3();
     }
     else if (step === 'dialogue_3') {
-        DOM.blk.classList.remove('active'); 
-        DOM.inp.disabled = true;
+        DOM.blk.classList.remove('active'); DOM.inp.disabled = true;
         await runTerminalFadeOut();
+    }
+    else if (step === 'sergey_confession_init') {
+        DOM.blk.classList.remove('active'); DOM.inp.disabled = true;
+        await runSergeyConfessionDialogue();
+    }
+    else if (step === 'branch_selection') {
+        if (!v) return;
+        DOM.blk.classList.remove('active'); DOM.inp.disabled = true;
+        addLine(DOM.pr.textContent + " " + v, 'success'); await delay(300);
+
+        if (cv === 'А' || cv === 'A' || cv === 'Ф') {
+            await runBranchA();
+        } else if (cv === 'Б' || cv === 'B' || cv === 'И') {
+            await runBranchB();
+        } else if (cv === 'В' || cv === 'V' || cv === 'W' || cv === 'М') {
+            await runBranchV();
+        } else {
+            DOM.term.classList.add('shake'); playBeep(130, 'triangle', 0.35);
+            setTimeout(() => DOM.term.classList.remove('shake'), 400);
+            addLine("НЕВЕРНЫЙ ИНДЕКС ЛОГА. ПОВТОРИТЕ ВВОД.", "error"); await delay(1000);
+            await showBranchOptions();
+        }
     }
 };
 
