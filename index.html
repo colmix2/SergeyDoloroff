@@ -12,7 +12,6 @@
             --err: #ff1111;        
             --acc: #ffffff;
             
-            /* Цвета для этапов откровения департаментов */
             --color-bordo: #800020;    
             --color-yellow: #ffcc00;   
             --color-red: #ff1111;      
@@ -34,6 +33,26 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            transition: background 1s ease;
+        }
+
+        /* Эффект жесткого атмосферного затемнения по бокам экрана (Контузия) */
+        body.shock-vignette {
+            background: radial-gradient(circle, #000000 30%, #050002 70%, #000000 100%);
+        }
+        body.shock-vignette::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.95), inset 0 0 100px rgba(94, 11, 33, 0.3);
+            z-index: 999;
+            pointer-events: none;
+            animation: pulseVignette 2s infinite alternate;
+        }
+
+        @keyframes pulseVignette {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
         
         @keyframes shake {
@@ -42,8 +61,17 @@
             40%, 80% { transform: translate(4px, -2px); }
         }
         .shake { animation: shake 0.2s ease-in-out 2; }
+        
+        /* Бесконечная жесткая судорога терминала при уничтожении базы */
+        @keyframes deathGlitch {
+            0%, 100% { transform: translate(0,0) skewX(0deg); filter: brightness(1); }
+            10% { transform: translate(-2px, 1px) skewX(-0.5deg); filter: brightness(1.2); }
+            20% { transform: translate(2px, -1px) skewX(0.5deg); }
+            30% { transform: translate(0, 0); filter: brightness(0.9); }
+            95% { transform: translate(1px, 1px); }
+        }
+        .terminal-death { animation: deathGlitch 0.15s infinite; }
 
-        /* Контейнер кинематографичного интро */
         #intro-screen {
             position: fixed;
             inset: 0;
@@ -75,8 +103,6 @@
             word-break: break-word;
             color: #ffffff;
         }
-
-        /* Консоль с поддержкой динамических рамок и неонового свечения */
         .terminal-box {
             width: 100%;
             max-width: 850px;
@@ -94,11 +120,9 @@
             transition: opacity 1s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
-        /* Неоновые состояния рамок */
         .terminal-box.stage-bordo {
             border-color: var(--color-bordo) !important;
             box-shadow: 0 0 20px var(--color-bordo), inset 0 0 10px var(--color-bordo) !important;
-            border-image: none !important;
         }
         .terminal-box.stage-split-2 {
             border-style: solid;
@@ -125,9 +149,17 @@
             align-items: center;
             text-align: center;
             flex-shrink: 0;
-            transition: border-bottom-color 0.5s ease;
+            transition: border-bottom-color 0.5s ease, color 0.5s ease, font-size 0.5s ease;
         }
         
+        .header.shock-text {
+            color: #ffffff !important;
+            font-size: 22px !important;
+            letter-spacing: 2px !important;
+            border-bottom-color: rgba(255, 17, 17, 0.4) !important;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+        }
+
         .logo-container {
             display: flex;
             justify-content: center;
@@ -137,7 +169,6 @@
             min-height: 85px; 
         }
 
-        /* Анимация плавного появления иконок */
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.9) rotate(-5deg); }
             to { opacity: 0.95; transform: scale(1) rotate(0deg); }
@@ -153,19 +184,10 @@
             animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Подгонка неоновых цветов и свечения для иконок фракций */
-        .logo-atlantis {
-            filter: brightness(0) invert(1);
-        }
-        .logo-las {
-            filter: invert(9%) sepia(87%) saturate(5484%) hue-rotate(334deg) brightness(60%) contrast(100%) drop-shadow(0 0 8px var(--color-bordo));
-        }
-        .logo-art {
-            filter: invert(74%) sepia(93%) saturate(1478%) hue-rotate(360deg) brightness(103%) contrast(106%) drop-shadow(0 0 8px var(--color-yellow));
-        }
-        .logo-tfb {
-            filter: invert(14%) sepia(96%) saturate(5799%) hue-rotate(357deg) brightness(98%) contrast(113%) drop-shadow(0 0 8px var(--color-red));
-        }
+        .logo-atlantis { filter: brightness(0) invert(1); }
+        .logo-las { filter: invert(9%) sepia(87%) saturate(5484%) hue-rotate(334deg) brightness(60%) contrast(100%) drop-shadow(0 0 12px var(--color-bordo)); }
+        .logo-art { filter: invert(74%) sepia(93%) saturate(1478%) hue-rotate(360deg) brightness(103%) contrast(106%) drop-shadow(0 0 12px var(--color-yellow)); }
+        .logo-tfb { filter: invert(14%) sepia(96%) saturate(5799%) hue-rotate(357deg) brightness(98%) contrast(113%) drop-shadow(0 0 12px var(--color-red)); }
         
         #out {
             flex-grow: 1;
@@ -184,7 +206,6 @@
             white-space: pre-wrap;
         }
 
-        /* Эффект атмосферного проявления текста по буквам (размытие + свечение) */
         @keyframes blurIn {
             from { filter: blur(6px); opacity: 0; text-shadow: 0 0 10px currentColor; }
             to { filter: blur(0px); opacity: 1; text-shadow: none; }
@@ -194,7 +215,6 @@
             animation: blurIn 0.4s ease forwards;
         }
         
-        /* Цвета и неоновый оттенок текста диалогов */
         .txt-bordo { color: #cc1144 !important; font-weight: bold; text-shadow: 0 0 4px rgba(204, 17, 68, 0.4); }
         .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; text-shadow: 0 0 4px rgba(255, 204, 0, 0.4); }
         .txt-red { color: var(--color-red) !important; font-weight: bold; text-shadow: 0 0 5px rgba(255, 17, 17, 0.5); }
@@ -269,7 +289,7 @@
         <div class="logo-container" id="logos-box">
             <img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">
         </div>
-        P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK
+        <span id="title-text">P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK</span>
     </div>
     <div id="out"></div>
     <div class="input-line" id="blk">
@@ -285,7 +305,7 @@ const CFG = {
     SPD_INTRO: 30,
     SPD_TERMINAL: 15,
     SPD_BIO: 5,
-    SPD_DIALOGUE: 25 // Оптимальная скорость для кинематографичного появления букв
+    SPD_DIALOGUE: 25
 };
 
 const BIO_CHAPTERS = [
@@ -317,7 +337,7 @@ const BIO_CHAPTERS = [
 Отдел уважает его не за мягкость, а за то, что он никогда не прячется за чужие спины. Командир, готовый лично пойти в авангарде.`,
 
     `ГЛАВА 10: Настоящее время.
-Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
+Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, and построил собственный бастион. Конец досье.`
 ];
 
 const DOM = { 
@@ -328,7 +348,8 @@ const DOM = {
     introLogo: document.getElementById('intro-logo'),
     introText: document.getElementById('intro-text'),
     hd: document.getElementById('hd'),
-    logosBox: document.getElementById('logos-box')
+    logosBox: document.getElementById('logos-box'),
+    titleText: document.getElementById('title-text')
 };
 
 let step = 'menu'; 
@@ -351,12 +372,24 @@ function playBeep(f, t, d) {
     } catch(e) {}
 }
 
+function playSiren(duration) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + duration);
+        g.gain.setValueAtTime(0.03, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    } catch(e){}
+}
+
 function addLine(txt, cls = "") {
     const d = document.createElement('div'); d.className = `line ${cls}`; d.textContent = txt; 
     DOM.out.appendChild(d); DOM.out.scrollTop = DOM.out.scrollHeight; return d;
 }
 
-// Стандартная печать для глав
 async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL) {
     isPrinting = true;
     const d = addLine("", cls);
@@ -368,7 +401,6 @@ async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL) {
     DOM.out.scrollTop = DOM.out.scrollHeight;
     isPrinting = false;
 }
-/* Новая кастомная функция вывода вопросов с эффектом нарастающего напряжения (анимация букв волной) */
 async function typeAnimateDialogue(txt, cls = "") {
     isPrinting = true;
     const d = addLine("", cls);
@@ -377,7 +409,6 @@ async function typeAnimateDialogue(txt, cls = "") {
         span.className = 'char-anim';
         span.textContent = txt.charAt(i);
         d.appendChild(span);
-        
         if (Math.random() > 0.3) playBeep(720, 'triangle', 0.02); 
         await delay(CFG.SPD_DIALOGUE);
     }
@@ -426,7 +457,9 @@ async function runCinematicIntro() {
 async function showMainMenu() {
     step = 'menu';
     DOM.term.className = "terminal-box";
-    DOM.term.style.boxShadow = "none";
+    document.body.className = "";
+    DOM.hd.className = "header";
+    DOM.titleText.textContent = 'P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK';
     DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
     DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
     DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">';
@@ -458,38 +491,32 @@ async function printNextChapter() {
 
 async function runDialogueStage1() {
     step = 'dialogue_1';
-    
     DOM.term.classList.add('stage-bordo');
     DOM.hd.style.borderBottomColor = "var(--color-bordo)";
     DOM.blk.style.borderTopColor = "var(--color-bordo)";
-    
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">';
     
     playBeep(180, 'sawtooth', 0.5);
     await typeAnimateDialogue("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
     await typeAnimateDialogue("...А ты знаешь, кто на самом деле виновник той трагедии на Итагурской АЭС?", "txt-bordo");
-    
     ask('ДЕПАРТАМЕНТ L.a.S // НАЖМИТЕ [ENTER]...', false);
 }
 
 async function runDialogueStage2() {
     step = 'dialogue_2';
     DOM.term.className = "terminal-box stage-split-2";
-    
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
                              '<img src="logoART.png" class="hub-logo logo-art" alt="ART">';
     
     playBeep(210, 'sawtooth', 0.5);
     await typeAnimateDialogue("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ ART]:", "txt-yellow");
     await typeAnimateDialogue("...А ты знаешь, что Гилберта можно было спасти, а не убивать?", "txt-yellow");
-    
     ask('ДЕПАРТАМЕНТ ART // НАЖМИТЕ [ENTER]...', false);
 }
 
 async function runDialogueStage3() {
     step = 'dialogue_3';
     DOM.term.className = "terminal-box stage-split-3";
-    
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
                              '<img src="logoART.png" class="hub-logo logo-art" alt="ART">' +
                              '<img src="logoTFB.png" class="hub-logo logo-tfb" alt="TFB">';
@@ -499,7 +526,41 @@ async function runDialogueStage3() {
     await typeAnimateDialogue("...А ты знаешь, что он убивал бойцов Расонии во втором секторе, когда те были согласны на перемирие?", "txt-red");
     
     addLine("\n---------------------------------------------------", "gray");
-    ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ ВОЗВРАТА В ХАБ...', false);
+    ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ СТРУКТУРНОГО ПЕРЕХОДА...', false);
+}
+
+async function runTerminalDestruction() {
+    step = 'terminal_destroyed';
+    document.body.classList.add('shock-vignette');
+    DOM.term.classList.add('terminal-death');
+    DOM.hd.classList.add('shock-text');
+    DOM.titleText.textContent = "Что за херня..?";
+    
+    playSiren(8);
+    
+    addLine("\n===================================================", "error");
+    await typeTerminal("🚨 [ВНИМАНИЕ] ОБНАРУЖЕНА КРИТИЧЕСКАЯ АНОМАЛИЯ ЯДРА БАЗЫ ДАННЫХ!", "error");
+    await typeTerminal("🚨 [СИГНАЛ SOS]: ДЕСТРУКТИВНЫЙ ВСПЛЕСК В СЕКТОРЕ УПРАВЛЕНИЯ ATLANTIS.", "error");
+    addLine("===================================================\n", "error");
+    await delay(1000);
+
+    await typeTerminal(">>> МОНИТОРИНГ ЖИЗНЕННЫХ ПОКАЗАТЕЛЕЙ СЕКТОРОВ ЧВК:", "gray");
+    await delay(500);
+    await typeTerminal("[-] БЛОК ПОСТ 'АВАНГАРД-1' ... [СВЯЗЬ ПОТЕРЯНА]", "error");
+    await typeTerminal("[-] ОПЕРАТИВНИК КЕЙН (ID-711) .. ПУЛЬС: 00 BPM [МЕРТВ]", "error");
+    await typeTerminal("[-] ОПЕРАТИВНИК РЕЙД (ID-402) .. ПУЛЬС: 00 BPM [МЕРТВ]", "error");
+    await delay(800);
+    
+    await typeTerminal("\n>>> ВТОРЖЕНИЕ В ЦЕНТРАЛЬНЫЙ ОТДЕЛ УПРАВЛЕНИЯ ГСБ...", "gray");
+    await typeTerminal("🚨 СИСТЕМА ЖИЗНЕОБЕСПЕЧЕНИЯ КАБИНЕТА КОМАНДОВАНИЯ СОРВАНА.", "error");
+    await typeTerminal("🚨 ЗАФИКСИРОВАНА П П С ПОЛНАЯ ПОТЕРЯ СИГНАЛА С ОПЕРАТОРОМ СЕРГЕЕМ.", "error");
+    await delay(1200);
+
+    addLine("\n---------------------------------------------------", "gray");
+    await typeTerminal("ДАННЫЕ ЧВК ATLANTIS УНИЧТОЖЕНЫ. ТЕРМИНАЛ ЗАБЛОКИРОВАН.", "gray");
+    
+    DOM.blk.classList.remove('active'); 
+    DOM.inp.disabled = true;
 }
 
 DOM.inp.oninput = () => { 
@@ -512,7 +573,6 @@ DOM.inp.oninput = () => {
 
 DOM.inp.onkeydown = async (e) => {
     if (e.key !== 'Enter' || isPrinting) return;
-    
     const v = DOM.inp.value, cv = v.trim();
 
     if (step === 'menu') {
@@ -558,8 +618,7 @@ DOM.inp.onkeydown = async (e) => {
     else if (step === 'dialogue_3') {
         DOM.blk.classList.remove('active'); 
         DOM.inp.disabled = true;
-        currentChapterIdx = 0;
-        await showMainMenu();
+        await runTerminalDestruction();
     }
 };
 
