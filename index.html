@@ -36,7 +36,6 @@
             transition: background 1.5s ease;
         }
 
-        /* ИСПРАВЛЕНО: Центрированный кинематографичный интро-экран */
         #intro-screen {
             position: fixed;
             inset: 0;
@@ -51,7 +50,6 @@
             transition: opacity 1s ease;
         }
         
-        /* ИСПРАВЛЕНО: Логотип жестко зажат в размерах и не ломает верстку */
         #intro-logo {
             width: 180px;
             height: 180px;
@@ -64,7 +62,6 @@
             display: block;
         }
         
-        /* ИСПРАВЛЕНО: Крупный читаемый текст по центру */
         #intro-text {
             width: 100%;
             max-width: 800px;
@@ -77,24 +74,6 @@
             margin: 0 auto;
         }
 
-        body.shock-vignette {
-            background: radial-gradient(circle, #000000 30%, #050002 70%, #000000 100%);
-        }
-        body.shock-vignette::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.95), inset 0 0 100px rgba(94, 11, 33, 0.3);
-            z-index: 999;
-            pointer-events: none;
-            animation: pulseVignette 2s infinite alternate;
-        }
-
-        @keyframes pulseVignette {
-            0% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-        
         @keyframes shake {
             0%, 100% { transform: translate(0, 0); }
             20%, 60% { transform: translate(-4px, 2px); }
@@ -118,6 +97,31 @@
             transition: opacity 3s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
+        /* Полупрозрачный фоновый слой крови за текстом */
+        .blood-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: url('blood.png');
+            background-size: cover;
+            background-position: center;
+            opacity: 0; /* Проявится в финале */
+            z-index: 1;  /* Строго позади контента */
+            pointer-events: none;
+            transition: opacity 3s ease;
+        }
+
+        /* Контент принудительно выносим вперед, чтобы кровь не перекрывала буквы */
+        .terminal-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Неоновые рамки этапов откровения */
         .terminal-box.stage-bordo {
             border-color: var(--color-bordo) !important;
             box-shadow: 0 0 20px var(--color-bordo), inset 0 0 10px var(--color-bordo) !important;
@@ -136,12 +140,21 @@
             box-shadow: -15px 0 25px var(--color-bordo), 0 0 25px var(--color-yellow), 15px 0 25px var(--color-red) !important;
         }
 
+        /* Анимация мелких аналоговых глитчей и мерцания для убитой консоли */
+        @keyframes glitchVibration {
+            0%, 100% { transform: translate(0, 0); opacity: 0.35; filter: grayscale(100%); }
+            5% { transform: translate(-1px, 1px); opacity: 0.4; }
+            10% { transform: translate(1px, -1px); opacity: 0.3; }
+            15% { transform: translate(0, 0); }
+            25% { opacity: 0.25; filter: grayscale(90%) contrast(80%); }
+            26% { opacity: 0.4; }
+        }
+        
         .terminal-box.dead-console {
             border-color: #444444 !important;
             border-image: none !important;
             box-shadow: none !important;
-            opacity: 0.35 !important;
-            filter: grayscale(100%);
+            animation: glitchVibration 0.3s infinite; /* Небольшие постоянные глюки */
         }
 
         .header {
@@ -160,10 +173,10 @@
         }
         
         .header.shock-text {
-            color: #888888 !important;
+            color: #777777 !important;
             font-size: 22px !important;
             letter-spacing: 2px !important;
-            border-bottom-color: #333333 !important;
+            border-bottom-color: #222222 !important;
         }
 
         .logo-container {
@@ -224,7 +237,7 @@
         .txt-bordo { color: #cc1144 !important; font-weight: bold; text-shadow: 0 0 4px rgba(204, 17, 68, 0.4); }
         .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; text-shadow: 0 0 4px rgba(255, 204, 0, 0.4); }
         .txt-red { color: var(--color-red) !important; font-weight: bold; text-shadow: 0 0 5px rgba(255, 17, 17, 0.5); }
-        .txt-dead { color: #777777 !important; font-weight: normal; }
+        .txt-dead { color: #666666 !important; font-weight: normal; }
 
         .input-line {
             display: flex;
@@ -292,18 +305,24 @@
 </div>
 
 <div class="terminal-box" id="term">
-    <div class="header" id="hd">
-        <div class="logo-container" id="logos-box">
-            <img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">
+    <!-- Слой капель крови позади текста логов -->
+    <div class="blood-overlay" id="blood-bg"></div>
+    
+    <!-- Основной изолированный контейнер интерфейса -->
+    <div class="terminal-content">
+        <div class="header" id="hd">
+            <div class="logo-container" id="logos-box">
+                <img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">
+            </div>
+            <span id="title-text">P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK</span>
         </div>
-        <span id="title-text">P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK</span>
-    </div>
-    <div id="out"></div>
-    <div class="input-line" id="blk">
-        <span class="prompt" id="pr">></span>
-        <div class="input-wrapper">
-            <input type="text" id="inp" autocomplete="off" disabled>
-            <div class="custom-view" id="view"></div>
+        <div id="out"></div>
+        <div class="input-line" id="blk">
+            <span class="prompt" id="pr">></span>
+            <div class="input-wrapper">
+                <input type="text" id="inp" autocomplete="off" disabled>
+                <div class="custom-view" id="view"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -316,6 +335,38 @@ const CFG = {
     SPD_DEAD: 40
 };
 
+const BIO_CHAPTERS = [
+    `ГЛАВА 1: Рождение в трущобах.
+Детство Сергея проходило среди серых промзон и фабричного дыма. С ранней юности ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
+
+    `ГЛАВА 2: Первая кровь и суровые уроки.
+Уличные потасовки быстро переросли в нечто большее. Сломанный нос, первые шрамы и осознание того, что единственный способ выжить — стать умнее и жестче окружающих.`,
+
+    `ГЛАВА 3: Военный контракт.
+Армия стала для него спасением от тюрьмы, но бросила в самое пекло локальных конфликтов. Именно там сформировался его тяжелый взгляд, который теперь боятся подчиненные.`,
+
+    `ГЛАВА 4: Роковая ошибка и шрамы.
+Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и ментальное.`,
+
+    `ГЛАВА 5: Знакомство с трубкой.
+Горький табак стал единственным средством заглушить постоянный запах гари в воспоминаниях. Дым скрывал эмоции, которые профессионалу показывать нельзя.`,
+
+    `ГЛАВА 6: Переход под крыло Atlantis.
+ЧВК заметила перспективного оперативника с железной дисциплиной. Ему предложили работу, где не задают лишних вопросов, а просто ликвидируют угрозы.`,
+
+    `ГЛАВА 7: Из грязи в командиры.
+Годы безупречной службы, сотни выполненных контрактов. Сергей поднимался по карьерной лестнице, оставляя за спиной горы выжженной земли.`,
+
+    `ГЛАВА 8: За кулисами штаба.
+Управление целым отделом ГСБ требует больше хладнокровия, чем стрельба. Враги теперь плели интриги в кабинетах, а не прятались в окопах.`,
+
+    `ГЛАВА 9: Уважение, выжженное сталью.
+Отдел уважает его не за мягкость, а за то, что он никогда не прячется за чужие спины. Командир, готовый лично пойти в авангарде.`,
+
+    `ГЛАВА 10: Настоящее время.
+Today он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
+];
+
 const DOM = { 
     term: document.getElementById('term'), inp: document.getElementById('inp'), 
     view: document.getElementById('view'), out: document.getElementById('out'), 
@@ -325,7 +376,8 @@ const DOM = {
     introText: document.getElementById('intro-text'),
     hd: document.getElementById('hd'),
     logosBox: document.getElementById('logos-box'),
-    titleText: document.getElementById('title-text')
+    titleText: document.getElementById('title-text'),
+    bloodBg: document.getElementById('blood-bg')
 };
 
 let step = 'menu'; 
@@ -335,7 +387,6 @@ let isPrinting = false;
 const delay = ms => new Promise(r => setTimeout(r, ms));
 let audioCtx = null;
 
-// Функции вывода подняты в топ скрипта
 function playBeep(f, t, d) {
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -347,19 +398,6 @@ function playBeep(f, t, d) {
         osc.connect(g); g.connect(audioCtx.destination); 
         osc.start(); osc.stop(audioCtx.currentTime + d);
     } catch(e) {}
-}
-
-function playSiren(duration) {
-    try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(90, audioCtx.currentTime);
-        osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + duration);
-        g.gain.setValueAtTime(0.03, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
-    } catch(e){}
 }
 
 function addLine(txt, cls = "") {
@@ -393,38 +431,6 @@ async function typeAnimateDialogue(txt, cls = "") {
     DOM.out.scrollTop = DOM.out.scrollHeight;
     isPrinting = false;
 }
-
-const BIO_CHAPTERS = [
-    `ГЛАВА 1: Рождение в трущобах.
-Детство Сергея проходило среди серых промзон и фабричного дыма. С ранней юности ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
-
-    `ГЛАВА 2: Первая кровь и суровые уроки.
-Уличные потасовки быстро переросли в нечто большее. Сломанный нос, первые шрамы и осознание того, что единственный способ выжить — стать умнее и жестче окружающих.`,
-
-    `ГЛАВА 3: Военный контракт.
-Армия стала для него спасением от тюрьмы, но бросила в самое пекло локальных конфликтов. Именно там сформировался его тяжелый взгляд, который теперь боятся подчиненные.`,
-
-    `ГЛАВА 4: Роковая ошибка и шрамы.
-Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и ментальное.`,
-
-    `ГЛАВА 5: Знакомство с трубкой.
-Горький табак стал единственным средством заглушить постоянный запах гари в воспоминаниях. Дым скрывал эмоции, которые профессионалу показывать нельзя.`,
-
-    `ГЛАВА 6: Переход под крыло Atlantis.
-ЧВК заметила перспективного оперативника с железной дисциплиной. Ему предложили работу, где не задают лишних вопросов, а просто ликвидируют угрозы.`,
-
-    `ГЛАВА 7: Из грязи в командиры.
-Годы безупречной службы, сотни выполненных контрактов. Сергей поднимался по карьерной лестнице, оставляя за спиной горы выжженной земли.`,
-
-    `ГЛАВА 8: За кулисами штаба.
-Управление целым отделом ГСБ требует больше хладнокровия, чем стрельба. Враги теперь плели интриги в кабинетах, а не прятались в окопах.`,
-
-    `ГЛАВА 9: Уважение, выжженное сталью.
-Отдел уважает его не за мягкость, а за то, что он никогда не прячется за чужие спины. Командир, готовый лично пойти в авангарде.`,
-
-    `ГЛАВА 10: Настоящее время.
-Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
-];
 async function typeIntro(txt, startLogo = false) {
     if (startLogo) DOM.introLogo.style.opacity = "1";
     for (let i = 0; i < txt.length; i++) {
@@ -471,6 +477,7 @@ async function showMainMenu() {
     DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
     DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
     DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">';
+    DOM.bloodBg.style.opacity = "0"; // Прячем кровь в главном меню
     
     DOM.out.innerHTML = "";
     await typeTerminal("PMC ATLANTIS // CENTRAL CORE TERMINAL v4.0", "success");
@@ -550,8 +557,11 @@ async function runTerminalFadeOut() {
     DOM.blk.classList.remove('active'); 
     DOM.inp.disabled = true;
 
+    // Включаем депрессивный глитч-класс консоли
     DOM.term.className = "terminal-box dead-console";
-    DOM.term.style.opacity = "0.35";
+    
+    // Плавно проявляем капли крови blood.png позади текста (прозрачность 0.25)
+    DOM.bloodBg.style.opacity = "0.25";
     await delay(500);
 
     await typeTerminal("--- АВАРИЙНЫЙ ДАМП ПАМЯТИ ЯДРА СЕКТОРНОЙ СЕТИ ATLANTIS ---", "txt-dead", CFG.SPD_DEAD, false);
