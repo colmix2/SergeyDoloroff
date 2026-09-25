@@ -13,9 +13,9 @@
             --acc: #ffffff;
             
             /* Цвета для этапов откровения департаментов */
-            --color-bordo: #5e0b21;    /* Темно-бордовый */
-            --color-yellow: #ffcc00;   /* Желтый */
-            --color-red: #ff1111;      /* Ало-красный */
+            --color-bordo: #800020;    
+            --color-yellow: #ffcc00;   
+            --color-red: #ff1111;      
         }
         body {
             background-color: var(--bg);
@@ -76,7 +76,7 @@
             color: #ffffff;
         }
 
-        /* Консоль с поддержкой динамических рамок */
+        /* Консоль с поддержкой динамических рамок и неонового свечения */
         .terminal-box {
             width: 100%;
             max-width: 850px;
@@ -91,22 +91,26 @@
             flex-direction: column;
             overflow: hidden;
             opacity: 0;
-            transition: opacity 1s ease, border-color 0.5s ease, border-image 0.5s ease;
+            transition: opacity 1s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
 
+        /* Неоновые состояния рамок */
         .terminal-box.stage-bordo {
             border-color: var(--color-bordo) !important;
+            box-shadow: 0 0 20px var(--color-bordo), inset 0 0 10px var(--color-bordo) !important;
             border-image: none !important;
         }
         .terminal-box.stage-split-2 {
             border-style: solid;
             border-width: 2px;
             border-image: linear-gradient(to right, var(--color-bordo) 50%, var(--color-yellow) 50%) 1 !important;
+            box-shadow: -10px 0 20px var(--color-bordo), 10px 0 20px var(--color-yellow) !important;
         }
         .terminal-box.stage-split-3 {
             border-style: solid;
             border-width: 2px;
             border-image: linear-gradient(to right, var(--color-bordo) 33%, var(--color-yellow) 33%, var(--color-yellow) 66%, var(--color-red) 66%) 1 !important;
+            box-shadow: -15px 0 25px var(--color-bordo), 0 0 25px var(--color-yellow), 15px 0 25px var(--color-red) !important;
         }
 
         .header {
@@ -133,10 +137,10 @@
             min-height: 85px; 
         }
 
-        /* Анимация плавного появления для картинок */
+        /* Анимация плавного появления иконок */
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 0.95; transform: scale(1); }
+            from { opacity: 0; transform: scale(0.9) rotate(-5deg); }
+            to { opacity: 0.95; transform: scale(1) rotate(0deg); }
         }
         
         .hub-logo {
@@ -146,22 +150,21 @@
             object-fit: cover;
             pointer-events: none;
             border-radius: 50%; 
-            animation: fadeIn 0.6s ease forwards; /* Плавное проявление */
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Точная подгонка цветов через CSS-фильтры */
+        /* Подгонка неоновых цветов и свечения для иконок фракций */
         .logo-atlantis {
             filter: brightness(0) invert(1);
         }
-        /* Скорректировано под мрачный темно-бордовый цвет по скриншоту */
         .logo-las {
-            filter: invert(9%) sepia(87%) saturate(5484%) hue-rotate(334deg) brightness(50%) contrast(100%);
+            filter: invert(9%) sepia(87%) saturate(5484%) hue-rotate(334deg) brightness(60%) contrast(100%) drop-shadow(0 0 8px var(--color-bordo));
         }
         .logo-art {
-            filter: invert(74%) sepia(93%) saturate(1478%) hue-rotate(360deg) brightness(103%) contrast(106%);
+            filter: invert(74%) sepia(93%) saturate(1478%) hue-rotate(360deg) brightness(103%) contrast(106%) drop-shadow(0 0 8px var(--color-yellow));
         }
         .logo-tfb {
-            filter: invert(14%) sepia(96%) saturate(5799%) hue-rotate(357deg) brightness(98%) contrast(113%);
+            filter: invert(14%) sepia(96%) saturate(5799%) hue-rotate(357deg) brightness(98%) contrast(113%) drop-shadow(0 0 8px var(--color-red));
         }
         
         #out {
@@ -180,10 +183,21 @@
             word-break: break-all;
             white-space: pre-wrap;
         }
+
+        /* Эффект атмосферного проявления текста по буквам (размытие + свечение) */
+        @keyframes blurIn {
+            from { filter: blur(6px); opacity: 0; text-shadow: 0 0 10px currentColor; }
+            to { filter: blur(0px); opacity: 1; text-shadow: none; }
+        }
+        .char-anim {
+            display: inline-block;
+            animation: blurIn 0.4s ease forwards;
+        }
         
-        .txt-bordo { color: var(--color-bordo) !important; font-weight: bold; }
-        .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; }
-        .txt-red { color: var(--color-red) !important; font-weight: bold; }
+        /* Цвета и неоновый оттенок текста диалогов */
+        .txt-bordo { color: #cc1144 !important; font-weight: bold; text-shadow: 0 0 4px rgba(204, 17, 68, 0.4); }
+        .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; text-shadow: 0 0 4px rgba(255, 204, 0, 0.4); }
+        .txt-red { color: var(--color-red) !important; font-weight: bold; text-shadow: 0 0 5px rgba(255, 17, 17, 0.5); }
 
         .input-line {
             display: flex;
@@ -271,7 +285,7 @@ const CFG = {
     SPD_INTRO: 30,
     SPD_TERMINAL: 15,
     SPD_BIO: 5,
-    SPD_DIALOGUE: 20
+    SPD_DIALOGUE: 25 // Оптимальная скорость для кинематографичного появления букв
 };
 
 const BIO_CHAPTERS = [
@@ -285,7 +299,7 @@ const BIO_CHAPTERS = [
 Армия стала для него спасением от тюрьмы, но бросила в самое пекло локальных конфликтов. Именно там сформировался его тяжелый взгляд, который теперь боятся подчиненные.`,
 
     `ГЛАВА 4: Роковая ошибка и шрамы.
-Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и mental-ьное.`,
+Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и ментальное.`,
 
     `ГЛАВА 5: Знакомство с трубкой.
 Горький табак стал единственным средством заглушить постоянный запах гари в воспоминаниях. Дым скрывал эмоции, которые профессионалу показывать нельзя.`,
@@ -342,6 +356,7 @@ function addLine(txt, cls = "") {
     DOM.out.appendChild(d); DOM.out.scrollTop = DOM.out.scrollHeight; return d;
 }
 
+// Стандартная печать для глав
 async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL) {
     isPrinting = true;
     const d = addLine("", cls);
@@ -353,6 +368,23 @@ async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL) {
     DOM.out.scrollTop = DOM.out.scrollHeight;
     isPrinting = false;
 }
+/* Новая кастомная функция вывода вопросов с эффектом нарастающего напряжения (анимация букв волной) */
+async function typeAnimateDialogue(txt, cls = "") {
+    isPrinting = true;
+    const d = addLine("", cls);
+    for (let i = 0; i < txt.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'char-anim';
+        span.textContent = txt.charAt(i);
+        d.appendChild(span);
+        
+        if (Math.random() > 0.3) playBeep(720, 'triangle', 0.02); 
+        await delay(CFG.SPD_DIALOGUE);
+    }
+    DOM.out.scrollTop = DOM.out.scrollHeight;
+    isPrinting = false;
+}
+
 async function typeIntro(txt, startLogo = false) {
     if (startLogo) DOM.introLogo.style.opacity = "1";
     for (let i = 0; i < txt.length; i++) {
@@ -394,9 +426,9 @@ async function runCinematicIntro() {
 async function showMainMenu() {
     step = 'menu';
     DOM.term.className = "terminal-box";
+    DOM.term.style.boxShadow = "none";
     DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
     DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
-    
     DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">';
     
     DOM.out.innerHTML = "";
@@ -416,7 +448,6 @@ async function printNextChapter() {
         if (currentChapterIdx < BIO_CHAPTERS.length) {
             ask('ХАБ // НАЖМИТЕ [ENTER] ДЛЯ СЛЕДУЮЩЕЙ ГЛАВЫ...', false);
         } else {
-            // Контрольная пауза после 10 главы
             step = 'bio_finished';
             addLine("\n---------------------------------------------------", "gray");
             await typeTerminal("ДОСЬЕ ПОЛНОСТЬЮ СКОПИРОВАНО В БУФЕР ПАМЯТИ.", "success");
@@ -432,12 +463,11 @@ async function runDialogueStage1() {
     DOM.hd.style.borderBottomColor = "var(--color-bordo)";
     DOM.blk.style.borderTopColor = "var(--color-bordo)";
     
-    // Вывод первой темно-бордовой иконки
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">';
     
-    playBeep(220, 'sawtooth', 0.4);
-    await typeTerminal("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
-    await typeTerminal("...А ты знаешь, кто на самом деле виновник той трагемии на Итагурской АЭС?", "txt-bordo", CFG.SPD_DIALOGUE);
+    playBeep(180, 'sawtooth', 0.5);
+    await typeAnimateDialogue("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
+    await typeAnimateDialogue("...А ты знаешь, кто на самом деле виновник той трагедии на Итагурской АЭС?", "txt-bordo");
     
     ask('ДЕПАРТАМЕНТ L.a.S // НАЖМИТЕ [ENTER]...', false);
 }
@@ -446,13 +476,12 @@ async function runDialogueStage2() {
     step = 'dialogue_2';
     DOM.term.className = "terminal-box stage-split-2";
     
-    // Мягкое добавление второй иконки рядом
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
                              '<img src="logoART.png" class="hub-logo logo-art" alt="ART">';
     
-    playBeep(260, 'sawtooth', 0.4);
-    await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ ART]:", "txt-yellow");
-    await typeTerminal("...А ты знаешь, что Гилберта можно было спасти, а не убивать?", "txt-yellow", CFG.SPD_DIALOGUE);
+    playBeep(210, 'sawtooth', 0.5);
+    await typeAnimateDialogue("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ ART]:", "txt-yellow");
+    await typeAnimateDialogue("...А ты знаешь, что Гилберта можно было спасти, а не убивать?", "txt-yellow");
     
     ask('ДЕПАРТАМЕНТ ART // НАЖМИТЕ [ENTER]...', false);
 }
@@ -461,14 +490,13 @@ async function runDialogueStage3() {
     step = 'dialogue_3';
     DOM.term.className = "terminal-box stage-split-3";
     
-    // Мягкое добавление третьей иконки в ряд
     DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
                              '<img src="logoART.png" class="hub-logo logo-art" alt="ART">' +
                              '<img src="logoTFB.png" class="hub-logo logo-tfb" alt="TFB">';
     
-    playBeep(300, 'sawtooth', 0.5);
-    await typeTerminal("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ T.F.B]:", "txt-red");
-    await typeTerminal("...А ты знаешь, что он убивал бойцов Расонии во втором секторе, когда те были согласны на перемирие?", "txt-red", CFG.SPD_DIALOGUE);
+    playBeep(240, 'sawtooth', 0.6);
+    await typeAnimateDialogue("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ T.F.B]:", "txt-red");
+    await typeAnimateDialogue("...А ты знаешь, что он убивал бойцов Расонии во втором секторе, когда те были согласны на перемирие?", "txt-red");
     
     addLine("\n---------------------------------------------------", "gray");
     ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ ВОЗВРАТА В ХАБ...', false);
