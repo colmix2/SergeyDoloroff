@@ -36,6 +36,25 @@
             transition: background 1.5s ease;
         }
 
+        /* Эффект жесткого атмосферного затемнения по бокам экрана (Контузия) */
+        body.shock-vignette {
+            background: radial-gradient(circle, #000000 30%, #050002 70%, #000000 100%);
+        }
+        body.shock-vignette::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.95), inset 0 0 100px rgba(94, 11, 33, 0.3);
+            z-index: 999;
+            pointer-events: none;
+            animation: pulseVignette 2s infinite alternate;
+        }
+
+        @keyframes pulseVignette {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
         @keyframes shake {
             0%, 100% { transform: translate(0, 0); }
             20%, 60% { transform: translate(-4px, 2px); }
@@ -43,37 +62,6 @@
         }
         .shake { animation: shake 0.2s ease-in-out 2; }
 
-        #intro-screen {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            box-sizing: border-box;
-            z-index: 50;
-            background: #000000;
-            transition: opacity 1s ease;
-        }
-        #intro-logo {
-            max-width: 220px;
-            height: auto;
-            margin-bottom: 40px;
-            opacity: 0;
-            filter: brightness(0) invert(1);
-            transition: opacity 1.5s ease;
-            pointer-events: none;
-        }
-        #intro-text {
-            max-width: 800px;
-            font-size: 24px;
-            line-height: 1.6;
-            text-align: center;
-            white-space: pre-wrap;
-            word-break: break-word;
-            color: #ffffff;
-        }
         .terminal-box {
             width: 100%;
             max-width: 850px;
@@ -115,7 +103,7 @@
             border-color: #444444 !important;
             border-image: none !important;
             box-shadow: none !important;
-            opacity: 0.35 !important; /* Сильное затухание всей консоли */
+            opacity: 0.35 !important;
             filter: grayscale(100%);
         }
 
@@ -134,7 +122,6 @@
             transition: border-bottom-color 0.5s ease, color 0.5s ease, font-size 0.5s ease;
         }
         
-        /* Изменение заголовка при шоке */
         .header.shock-text {
             color: #888888 !important;
             font-size: 22px !important;
@@ -200,8 +187,6 @@
         .txt-bordo { color: #cc1144 !important; font-weight: bold; text-shadow: 0 0 4px rgba(204, 17, 68, 0.4); }
         .txt-yellow { color: var(--color-yellow) !important; font-weight: bold; text-shadow: 0 0 4px rgba(255, 204, 0, 0.4); }
         .txt-red { color: var(--color-red) !important; font-weight: bold; text-shadow: 0 0 5px rgba(255, 17, 17, 0.5); }
-
-        /* Депрессивный серый цвет для системного дампа мертвой консоли */
         .txt-dead { color: #777777 !important; font-weight: normal; }
 
         .input-line {
@@ -286,14 +271,93 @@
     </div>
 </div>
 <script>
+// 1. Все конфигурации и DOM-элементы объявляются в строгой первоочередности
 const CFG = { 
     SPD_INTRO: 30,
     SPD_TERMINAL: 15,
     SPD_BIO: 5,
     SPD_DIALOGUE: 25,
-    SPD_DEAD: 40 // Заброшенная консоль печатает очень медленно и тяжело
+    SPD_DEAD: 40
 };
 
+const DOM = { 
+    term: document.getElementById('term'), inp: document.getElementById('inp'), 
+    view: document.getElementById('view'), out: document.getElementById('out'), 
+    pr: document.getElementById('pr'), blk: document.getElementById('blk'),
+    introScreen: document.getElementById('intro-screen'),
+    introLogo: document.getElementById('intro-logo'),
+    introText: document.getElementById('intro-text'),
+    hd: document.getElementById('hd'),
+    logosBox: document.getElementById('logos-box'),
+    titleText: document.getElementById('title-text')
+};
+
+let step = 'menu'; 
+let currentChapterIdx = 0;
+let isMask = false;
+let isPrinting = false;
+const delay = ms => new Promise(r => setTimeout(r, ms));
+let audioCtx = null;
+
+// 2. Глобальные функции вывода подняты наверх скрипта (решает ошибку «not defined»)
+function playBeep(f, t, d) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        osc.type = t; osc.frequency.value = f; 
+        g.gain.setValueAtTime(0.015, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + d);
+        osc.connect(g); g.connect(audioCtx.destination); 
+        osc.start(); osc.stop(audioCtx.currentTime + d);
+    } catch(e) {}
+}
+
+function playSiren(duration) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + duration);
+        g.gain.setValueAtTime(0.03, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    } catch(e){}
+}
+
+function addLine(txt, cls = "") {
+    const d = document.createElement('div'); d.className = `line ${cls}`; d.textContent = txt; 
+    DOM.out.appendChild(d); DOM.out.scrollTop = DOM.out.scrollHeight; return d;
+}
+
+async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL, withBeep = true) {
+    isPrinting = true;
+    const d = addLine("", cls);
+    for (let i = 0; i < txt.length; i++) {
+        d.textContent += txt.charAt(i); 
+        if (withBeep && Math.random() > 0.3) playBeep(840, 'square', 0.015); 
+        await delay(speed);
+    }
+    DOM.out.scrollTop = DOM.out.scrollHeight;
+    isPrinting = false;
+}
+
+async function typeAnimateDialogue(txt, cls = "") {
+    isPrinting = true;
+    const d = addLine("", cls);
+    for (let i = 0; i < txt.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'char-anim';
+        span.textContent = txt.charAt(i);
+        d.appendChild(span);
+        if (Math.random() > 0.3) playBeep(720, 'triangle', 0.02); 
+        await delay(CFG.SPD_DIALOGUE);
+    }
+    DOM.out.scrollTop = DOM.out.scrollHeight;
+    isPrinting = false;
+}
+// Массив с главами изолирован и экранирован
 const BIO_CHAPTERS = [
     `ГЛАВА 1: Рождение в трущобах.
 Детство Сергея проходило среди серых промзон и фабричного дыма. С ранней юности ему пришлось уяснить простое правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
@@ -325,65 +389,6 @@ const BIO_CHAPTERS = [
     `ГЛАВА 10: Настоящее время.
 Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
 ];
-
-const DOM = { 
-    term: document.getElementById('term'), inp: document.getElementById('inp'), 
-    view: document.getElementById('view'), out: document.getElementById('out'), 
-    pr: document.getElementById('pr'), blk: document.getElementById('blk'),
-    introScreen: document.getElementById('intro-screen'),
-    introLogo: document.getElementById('intro-logo'),
-    introText: document.getElementById('intro-text'),
-    hd: document.getElementById('hd'),
-    logosBox: document.getElementById('logos-box'),
-    titleText: document.getElementById('title-text')
-};
-
-let step = 'menu'; 
-let currentChapterIdx = 0;
-let isMask = false;
-let isPrinting = false;
-const delay = ms => new Promise(r => setTimeout(r, ms));
-let audioCtx = null;
-
-function playBeep(f, t, d) {
-    try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-        osc.type = t; osc.frequency.value = f; 
-        g.gain.setValueAtTime(0.015, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + d);
-        osc.connect(g); g.connect(audioCtx.destination); 
-        osc.start(); osc.stop(audioCtx.currentTime + d);
-    } catch(e) {}
-}
-
-async function typeTerminal(txt, cls = "", speed = CFG.SPD_TERMINAL, withBeep = true) {
-    isPrinting = true;
-    const d = addLine("", cls);
-    for (let i = 0; i < txt.length; i++) {
-        d.textContent += txt.charAt(i); 
-        if (withBeep && Math.random() > 0.3) playBeep(840, 'square', 0.015); 
-        await delay(speed);
-    }
-    DOM.out.scrollTop = DOM.out.scrollHeight;
-    isPrinting = false;
-}
-
-async function typeAnimateDialogue(txt, cls = "") {
-    isPrinting = true;
-    const d = addLine("", cls);
-    for (let i = 0; i < txt.length; i++) {
-        const span = document.createElement('span');
-        span.className = 'char-anim';
-        span.textContent = txt.charAt(i);
-        d.appendChild(span);
-        if (Math.random() > 0.3) playBeep(720, 'triangle', 0.02); 
-        await delay(CFG.SPD_DIALOGUE);
-    }
-    DOM.out.scrollTop = DOM.out.scrollHeight;
-    isPrinting = false;
-}
 async function typeIntro(txt, startLogo = false) {
     if (startLogo) DOM.introLogo.style.opacity = "1";
     for (let i = 0; i < txt.length; i++) {
@@ -496,30 +501,23 @@ async function runDialogueStage3() {
     ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ ОБРЫВА КАНАЛА...', false);
 }
 
-// МЕДЛЕННОЕ ЗАТЕМНЕНИЕ И ПЕРЕРОЖДЕНИЕ В ЗАБРОШЕННУЮ КОНСОЛЬ
 async function runTerminalFadeOut() {
     step = 'terminal_destroyed';
-    
-    // Медленно тушим текущую консоль в полный ноль
     DOM.term.style.opacity = "0";
-    await delay(3000); // 3 секунды полной темноты и тишины
+    await delay(3000); 
 
-    // Перестраиваем шапку и зачищаем логи под мертвый терминал
     DOM.logosBox.innerHTML = ''; 
     DOM.hd.classList.add('shock-text');
     DOM.titleText.textContent = "Что за херня..?";
     DOM.out.innerHTML = "";
     
-    // Убираем строку ввода навсегда
     DOM.blk.classList.remove('active'); 
     DOM.inp.disabled = true;
 
-    // Проявляем консоль заново, но теперь она блеклая, серая и заброшенная
     DOM.term.className = "terminal-box dead-console";
     DOM.term.style.opacity = "0.35";
     await delay(500);
 
-    // Тяжелый, медленный вывод системного аварийного лога (БЕЗ БИПОВ, полная тишина)
     await typeTerminal("--- АВАРИЙНЫЙ ДАМП ПАМЯТИ ЯДРА СЕКТОРНОЙ СЕТИ ATLANTIS ---", "txt-dead", CFG.SPD_DEAD, false);
     await delay(600);
     await typeTerminal("[КРИТИЧЕСКИЙ СБОЙ]: Потеря связи с внешним шлюзом управления.", "txt-dead", CFG.SPD_DEAD, false);
@@ -591,7 +589,7 @@ DOM.inp.onkeydown = async (e) => {
     else if (step === 'dialogue_3') {
         DOM.blk.classList.remove('active'); 
         DOM.inp.disabled = true;
-        await runTerminalFadeOut(); // Запускаем фазу полного затемнения и перерождения
+        await runTerminalFadeOut();
     }
 };
 
