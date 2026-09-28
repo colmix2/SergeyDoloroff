@@ -142,7 +142,7 @@
             box-shadow: -15px 0 25px var(--color-bordo), 0 0 25px var(--color-yellow), 15px 0 25px var(--color-red) !important;
         }
 
-        /* Медленное, плавное угасание и потеря контраста (безопасно для эпилептиков) */
+        /* Медленное, плавное угасание и потеря контраста */
         @keyframes staticDepression {
             0%, 100% { opacity: 0.35; }
             50% { opacity: 0.20; }
@@ -221,7 +221,7 @@
             margin-bottom: 8px;
             word-break: break-all;
             white-space: pre-wrap;
-            padding-left: 12px; /* ИСПРАВЛЕНО: Рамка больше не будет урезать первую букву */
+            padding-left: 12px; 
         }
 
         .txt-bordo { color: #ff2266 !important; font-weight: bold; text-shadow: 0 0 4px rgba(255, 34, 102, 0.3); }
@@ -247,7 +247,7 @@
         
         .prompt {
             margin-right: 12px;
-            margin-left: 12px; /* ИСПРАВЛЕНО: Выравнивает указатель ввода ровно по тексту логов */
+            margin-left: 12px; 
             color: var(--glow);
             font-weight: bold;
             flex-shrink: 0;
@@ -348,28 +348,9 @@ let isMask = false;
 let isPrinting = false;
 const delay = ms => new Promise(r => setTimeout(r, ms));
 let audioCtx = null;
-let sergeyMusic = null; // Движок для атмосферного трека 13AM.mp3
+let sergeyMusic = null; 
 
-// Функция включения вашей музыки для сломанной консоли
-function playSergeyMusic() {
-    if (!sergeyMusic) {
-        sergeyMusic = new Audio('13AM.mp3');
-        sergeyMusic.loop = true;          // Музыка играет бесконечно по кругу (циклично)
-        sergeyMusic.volume = 0.5;         // Умеренная громкость фонового эмбиента
-    }
-    // Возобновляем или запускаем заново
-    sergeyMusic.currentTime = 0;
-    sergeyMusic.play().catch(e => console.log("Браузер заблокировал авто-воспроизведение музыки"));
-}
-
-// Функция отключения музыки при возможном выходе/сбросе меню
-function stopSergeyMusic() {
-    if (sergeyMusic) {
-        sergeyMusic.pause();
-        sergeyMusic.currentTime = 0;
-    }
-}
-
+// ИСПРАВЛЕНО: Все функции без исключения вынесены наверх скрипта, ReferenceError полностью устранен!
 function playBeep(f, t, d) {
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -386,7 +367,7 @@ function playBeep(f, t, d) {
 function playSiren(duration) {
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        const osc = audioCtx.createOscillator(); const g = document.createGain ? document.createGain() : audioCtx.createGain();
         osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, audioCtx.currentTime);
         osc.frequency.linearRampToValueAtTime(55, audioCtx.currentTime + duration);
         g.gain.setValueAtTime(0.02, audioCtx.currentTime);
@@ -394,6 +375,23 @@ function playSiren(duration) {
         osc.connect(g); g.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + duration);
     } catch(e){}
+}
+
+function playSergeyMusic() {
+    if (!sergeyMusic) {
+        sergeyMusic = new Audio('13AM.mp3');
+        sergeyMusic.loop = true;          
+        sergeyMusic.volume = 0.5;         
+    }
+    sergeyMusic.currentTime = 0;
+    sergeyMusic.play().catch(e => console.log("Музыка ожидает взаимодействия"));
+}
+
+function stopSergeyMusic() {
+    if (sergeyMusic) {
+        sergeyMusic.pause();
+        sergeyMusic.currentTime = 0;
+    }
 }
 
 function addLine(txt, cls = "") {
@@ -429,6 +427,181 @@ async function typeAnimateDialogue(txt, cls = "") {
     }
     isPrinting = false;
 }
+async function typeIntro(txt, startLogo = false) {
+    if (startLogo) DOM.introLogo.style.opacity = "1";
+    for (let i = 0; i < txt.length; i++) {
+        DOM.introText.textContent += txt.charAt(i);
+        if (Math.random() > 0.3) playBeep(700, 'sine', 0.02);
+        await delay(CFG.SPD_INTRO);
+    }
+}
+
+function ask(promptText, maskInput = false) { 
+    isMask = maskInput; 
+    DOM.pr.textContent = promptText; 
+    DOM.inp.value = DOM.view.textContent = ""; 
+    DOM.inp.disabled = false; 
+    DOM.blk.classList.add('active'); 
+    DOM.inp.focus(); 
+}
+
+async function showMainMenu() {
+    step = 'menu';
+    DOM.term.className = "terminal-box";
+    DOM.hd.className = "header";
+    DOM.titleText.textContent = 'P.M.C. "ATLANTIS" // INFILTRATION & STEALTH OPERATIONS NETWORK';
+    DOM.hd.style.borderBottomColor = "rgba(255, 255, 255, 0.2)";
+    DOM.blk.style.borderTopColor = "rgba(255, 255, 255, 0.2)";
+    DOM.logosBox.innerHTML = '<img src="atlantis.png" class="hub-logo logo-atlantis" alt="LOGOTYPE">';
+    DOM.bloodBg.style.opacity = "0"; 
+    
+    DOM.out.innerHTML = "";
+    await typeTerminal("PMC ATLANTIS // CENTRAL CORE TERMINAL v4.0", "success");
+    await typeTerminal("ДОСТУПНЫЕ ОПЦИИ СИСТЕМЫ:", "gray");
+    await typeTerminal("1. Прочитать биографию Сергея", "success");
+    ask('ВЫБЕРИТЕ ПУНКТ (1):', false);
+}
+
+async function runCinematicIntro() {
+    DOM.introText.textContent = "";
+    await typeIntro("Сергей — хороший человек и отличный ГСБ, которого искренне уважает его отдел. ");
+    await delay(1200);
+    await typeIntro("Но задумывались ли вы когда-нибудь, через какой ад ему пришлось пройти и что именно он пережил, чтобы в итоге занять это кресло?\n\n");
+    await delay(1500);
+    await typeIntro("За жестким характером, вечной трубкой в зубах и тяжелым взглядом скрывается история парня, которого жизнь ломала с самого детства.", true);
+    await delay(3500);
+
+    DOM.introScreen.style.opacity = "0";
+    await delay(1000);
+    DOM.introScreen.style.display = "none";
+
+    DOM.term.style.display = "flex";
+    await delay(50);
+    DOM.term.style.opacity = "1";
+    
+    await showMainMenu();
+}
+
+const BIO_CHAPTERS = [
+    `ГЛАВА 1: Рождение в трущобах.
+Детство Сергея проходило среди серых промзон и фабричного дыма. С ранней юности ему пришлось уяснить простые правило: если не ударишь ты, ударят тебя. Жизнь не оставляла выбора.`,
+
+    `ГЛАВА 2: Первая кровь и суровые уроки.
+Уличные потасовки быстро переросли в нечто большее. Сломанный нос, первые шрамы и осознание того, что единственный способ выжить — стать умнее и жестче окружающих.`,
+
+    `ГЛАВА 3: Военный контракт.
+Армия стала для него спасением от тюрьмы, но бросила в самое пекло локальных конфликтов. Именно там сформировался его тяжелый взгляд, который теперь боятся подчиненные.`,
+
+    `ГЛАВА 4: Роковая ошибка и шрамы.
+Не все операции проходят гладко. Засада в ущелье унесла жизни его товарищей и оставила Сергею напоминание на всю жизнь — физическое и ментальное.`,
+
+    `ГЛАВА 5: Знакомство с трубкой.
+Горький табак стал единственным средством заглушить постоянный запах гари в воспоминаниях. Дым скрывал эмоции, которые профессионалу показывать нельзя.`,
+
+    `ГЛАВА 6: Переход под крыло Atlantis.
+ЧВК заметила перспективного оперативника с железной дисциплиной. Ему предложили работу, где не задают лишних вопросов, а просто ликвидируют угрозы.`,
+
+    `ГЛАВА 7: Из грязи в командиры.
+Годы безупречной службы, сотни выполненных контрактов. Сергей поднимался по карьерной лестнице, оставляя за спиной горы выжженной земли.`,
+
+    `ГЛАВА 8: За кулисами штаба.
+Управление целым отделом ГСБ требует больше хладнокровия, чем стрельба. Враги теперь плели интриги в кабинетах, а не прятались в окопах.`,
+
+    `ГЛАВА 9: Уважение, выжженное сталью.
+Отдел уважает его не за мягкость, а за то, что он никогда не прячется за чужие спины. Командир, готовый лично пойти в авангарде.`,
+
+    `ГЛАВА 10: Настоящее время.
+Сегодня он сидит в этом кресле, выпуская кольца дыма. Он прошел через ад, сломал систему, которая ломала его, и построил собственный бастион. Конец досье.`
+];
+
+async function printNextChapter() {
+    if (currentChapterIdx < BIO_CHAPTERS.length) {
+        step = 'reading_bio';
+        addLine("\n---------------------------------------------------", "gray");
+        await typeTerminal(BIO_CHAPTERS[currentChapterIdx], "", CFG.SPD_BIO);
+        currentChapterIdx++;
+        
+        if (currentChapterIdx < BIO_CHAPTERS.length) {
+            ask('ХАБ // НАЖМИТЕ [ENTER] ДЛЯ СЛЕДУЮЩЕЙ ГЛАВЫ...', false);
+        } else {
+            step = 'bio_finished';
+            addLine("\n---------------------------------------------------", "gray");
+            await typeTerminal("ДОСЬЕ ПОЛНОСТЬЮ СКОПИРОВАНО В БУФЕР ПАМЯТИ.", "success");
+            ask('ХАБ // НАЖМИТЕ [ENTER] ДЛЯ ИНИЦИАЛИЗАЦИИ ВНЕШНЕГО КАНАЛА...', false);
+        }
+    }
+}
+async function runDialogueStage1() {
+    step = 'dialogue_1';
+    DOM.term.classList.add('stage-bordo');
+    DOM.hd.style.borderBottomColor = "var(--color-bordo)";
+    DOM.blk.style.borderTopColor = "var(--color-bordo)";
+    DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">';
+    
+    playBeep(180, 'sawtooth', 0.4);
+    await typeAnimateDialogue("[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ L.a.S]:", "txt-bordo");
+    await typeAnimateDialogue("...А ты знаешь, кто на самом деле виновник той трагедии на Итагурской АЭС?", "txt-bordo");
+    ask('ДЕПАРТАМЕНТ L.a.S // НАЖМИТЕ [ENTER]...', false);
+}
+
+async function runDialogueStage2() {
+    step = 'dialogue_2';
+    DOM.term.className = "terminal-box stage-split-2";
+    DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
+                             '<img src="logoART.png" class="hub-logo logo-art" alt="ART">';
+    
+    playBeep(210, 'sawtooth', 0.4);
+    await typeAnimateDialogue("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ ART]:", "txt-yellow");
+    await typeAnimateDialogue("...А ты знаешь, что Гилберта можно было спасти, а не убивать?", "txt-yellow");
+    ask('ДЕПАРТАМЕНТ ART // НАЖМИТЕ [ENTER]...', false);
+}
+
+async function runDialogueStage3() {
+    step = 'dialogue_3';
+    DOM.term.className = "terminal-box stage-split-3";
+    DOM.logosBox.innerHTML = '<img src="logoLAS.png" class="hub-logo logo-las" alt="LAS">' +
+                             '<img src="logoART.png" class="hub-logo logo-art" alt="ART">' +
+                             '<img src="logoTFB.png" class="hub-logo logo-tfb" alt="TFB">';
+    
+    playBeep(240, 'sawtooth', 0.6);
+    await typeAnimateDialogue("\n[ВНЕШНИЙ КАНАЛ СВЯЗИ // ДЕПАРТАМЕНТ T.F.B]:", "txt-red");
+    await typeAnimateDialogue("...А ты знаешь, что он убивал бойцов Расонии во втором секторе, когда те были согласны на перемирие?", "txt-red");
+    
+    addLine("\n---------------------------------------------------", "gray");
+    ask('СВЯЗЬ ОБОРВАНА // НАЖМИТЕ [ENTER] ДЛЯ СТРУКТУРНОГО ПЕРЕХОДА...', false);
+}
+
+async function runTerminalFadeOut() {
+    step = 'sergey_confession_init';
+    DOM.term.style.opacity = "0";
+    await delay(3000); 
+
+    DOM.logosBox.innerHTML = ''; 
+    DOM.hd.classList.add('shock-text');
+    DOM.titleText.textContent = "Что за херня..?";
+    DOM.out.innerHTML = "";
+
+    DOM.term.className = "terminal-box dead-console";
+    DOM.bloodBg.style.opacity = "0.20";
+    await delay(500);
+
+    playSergeyMusic(); 
+    playSiren(6);
+
+    await typeTerminal("--- АВАРИЙНЫЙ ДАМП ПАМЯТИ ЯДРА СЕКТОРНОЙ СЕТИ ATLANTIS ---", "txt-dead", CFG.SPD_DEAD, false);
+    await delay(600);
+    await typeTerminal("[КРИТИЧЕСКИЙ СБОЙ]: Потеря связи с внешним шлюзом управления.", "txt-dead", CFG.SPD_DEAD, false);
+    await delay(500);
+    
+    await typeTerminal("\n[ДАННЫЕ БИОМЕТРИИ ОПЕРАТИВНИКОВ ОТДЕЛЕНИЯ]:", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("[-] Офицер Сергей Долорофф (ID-001) ... СТАТУС: ТРЕКЕР УНИЧТОЖЕН / ОБОРВАН", "error", CFG.SPD_DEAD, false);
+    await typeTerminal("[-] Оперативник Кейн (ID-711) ......... СТАТУС: ЛЕТАЛЬНЫЙ (00 BPM)", "txt-dead", CFG.SPD_DEAD, false);
+    await typeTerminal("[-] Оперативник Рейд (ID-402) ......... СТАТУС: ЛЕТАЛЬНЫЙ (00 BPM)", "txt-dead", CFG.SPD_DEAD, false);
+    await delay(800);
+
+    await typeTerminal("\n[ВНИМАНИЕ]: Перехват удаленного лога принудительного шифрования. Нажмите [ENTER]...", "error", CFG.SPD_DEAD, false);
+    ask('ОБНАРУЖЕНА ЗАПИСЬ // НАЖМИТЕ [ENTER]...', false);
+}
 async function runSergeyConfessionDialogue() {
     step = 'branch_selection'; 
     
@@ -455,8 +628,7 @@ async function showBranchOptions() {
 }
 
 async function runBranchA() {
-    step = 'branch_processing';
-    addLine("");
+    step = 'branch_processing'; addLine("");
     await typeTerminal("Сергей: Мне было 16. Я закончил 9 класс и решил погулять со своими друзьями до поздна. Я много раз конфликтовал с мамой когда она была пьяна, орал, говорил что она сама ничего не добилась и не стану как она. Но когда она трезвая, мы как семья. Она мне написала чтобы я вернулся домой и начала доставать, я сказал чтобы она шла нахуй пока не отрезвеет..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
     await typeTerminal("Сергей: Когда я пришел домой я заметил ее лежащей среди бутылок. Я перевернул ее лицом к себе и заметил, что она не смотрит на меня и не отвечает..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
     await typeTerminal("Сергей: Приложив два пальца к шее, я понял что у нее нет пульса..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
@@ -467,8 +639,7 @@ async function runBranchA() {
 }
 
 async function runBranchB() {
-    step = 'branch_processing';
-    addLine("");
+    step = 'branch_processing'; addLine("");
     await typeTerminal("Сергей: После смерти моей мамы, я начал сильно пить. У меня развилась алкогольная амнезия и зависимость..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
     await typeTerminal("Сергей: Пытаясь глушить свою боль и зависимость я стал курить. Я решил быть как дедушка, взял трубку да попробовал курить с нее. И мне понравилось..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
     await typeTerminal("Сергей: Я может и не самый лучший ребенок, скорее, я вообще не имел право получить высшее образование, судьба наделила меня этим, чтобы я воевал чтобы заглушить свою боль и получить хоть какие то деньги..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
@@ -478,8 +649,7 @@ async function runBranchB() {
 }
 
 async function runBranchV() {
-    step = 'branch_processing';
-    addLine("");
+    step = 'branch_processing'; addLine("");
     await typeTerminal("Сергей: Это не так просто. После собеседования комитета между тремя департаментами, отчеты разделились на 3 группы..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
     await typeTerminal("Сергей: Департамент L.a.S имел все отчёты что происходило на Итагурской. Департамент A.R.T имел все отчёты умерших бойцов, экспериментов и отчёты изучений вируса WE-30. Департамент T.F.B имел все отчёты что связано с линиями фронта, бойцов..", "txt-sergey", CFG.SPD_MONOLOGUE, false);
     await typeTerminal("Сергей: Я обладаю паролями департаментов, но не их консоли. L.a.S 577, T.F.B 687, A.R.T 432", "txt-sergey", CFG.SPD_MONOLOGUE, false);
@@ -504,7 +674,7 @@ DOM.inp.onkeydown = async (e) => {
         addLine(DOM.pr.textContent + " " + v, 'success'); await delay(300);
 
         if (v.trim() === '676') {
-            stopSergeyMusic(); // Сброс трека на случай повторов
+            stopSergeyMusic();
             await runTerminalFadeOut();
         } else if (v.trim() === '1') {
             stopSergeyMusic();
@@ -537,7 +707,6 @@ DOM.inp.onkeydown = async (e) => {
     }
     else if (step === 'sergey_confession_init') {
         DOM.blk.classList.remove('active'); DOM.inp.disabled = true;
-        // ВКЛЮЧЕНИЕ ЦИКЛИЧНОЙ МУЗЫКИ 13AM.mp3
         playSergeyMusic(); 
         await runSergeyConfessionDialogue();
     }
